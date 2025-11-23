@@ -9,16 +9,18 @@
   <link rel="stylesheet" href="style.css" />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
 
-  <script src="/socket.io/socket.io.js"></script>
-  <script src="/crypto-js/crypto-js.js"></script>
+  <!-- LOCAL socket.io (server served inside app, not browser) -->
+  <script src="https://blinkchat-i72t.onrender.com/socket.io/socket.io.js"></script>
+
+  <!-- CryptoJS local path -->
+  <script src="crypto-js/crypto-js.js"></script>
 </head>
 
 <body class="sm-page-bg">
 
-  <!-- CHAT WRAPPER -->
   <main class="sm-chat-wrap">
 
-    <!-- HEADER WITH TIMER + ROOM ID + QUIT -->
+    <!-- HEADER -->
     <header class="sm-chat-header" role="banner">
       <div>
         <div class="sm-chat-title">Private Chat Room</div>
@@ -31,7 +33,6 @@
           <span id="timerBox" class="sm-timer">00:00</span>
         </div>
 
-        <!-- Quit button (small, visible) -->
         <button id="quitBtn"
                 class="sm-btn"
                 style="padding:8px 12px; font-size:0.92rem; border-radius:10px; background:#ffffff; color:#0a53c9; box-shadow:none;">
@@ -40,58 +41,56 @@
       </div>
     </header>
 
-    <!-- CHAT CARD -->
+    <!-- CHAT AREA -->
     <section class="sm-chat-card" role="main" aria-live="polite">
 
-      <!-- TYPING INDICATOR -->
       <div id="typingIndicator"
            style="font-size:0.85rem;color:#6c84c5;display:none;text-align:center">
         Friend is typing…
       </div>
 
-      <!-- MESSAGES -->
-      <div id="messages" class="sm-messages" aria-live="polite" aria-atomic="false"></div>
+      <div id="messages" class="sm-messages" aria-live="polite"></div>
 
-      <!-- INPUT ROW -->
-      <div class="sm-input-row" role="form" aria-label="Send message">
-        <button id="emojiBtn" class="sm-emoji-btn" aria-label="Open emoji panel">😊</button>
-        <input id="messageInput" class="sm-message-input" type="text" placeholder="Type a message..." autocomplete="off" />
-        <button id="sendBtn" class="sm-send-btn" aria-label="Send">Send</button>
+      <div class="sm-input-row">
+        <button id="emojiBtn" class="sm-emoji-btn">😊</button>
+        <textarea id="messageInput" class="sm-message-input" placeholder="Type a message..." rows="1" autocomplete="off"></textarea>
+        <button id="sendBtn" class="sm-send-btn">Send</button>
       </div>
 
     </section>
 
     <div class="sm-chat-note">Temporary encrypted room. No messages are stored.</div>
+    <footer style="text-align:center;margin-bottom:14px;">
+    <a href="privacy.html" style="color:#ffffff;">Privacy Policy</a> •
+    <a href="terms.html" style="color:#ffffff;">Terms</a>
+    </footer>
 
   </main>
 
   <!-- EMOJI PANEL -->
   <div id="emojiPanel"
-       style="display:none; position:fixed; bottom:90px; left:20px;
-              background:#fff; border:1px solid #d7e1f5;
-              padding:10px; border-radius:10px;
-              box-shadow:0px 12px 28px rgba(0,0,0,0.15); z-index:200;">
+       style="display:none; position:fixed; bottom:90px; left:20px; background:#fff; border:1px solid #d7e1f5;
+              padding:10px; border-radius:10px; box-shadow:0px 12px 28px rgba(0,0,0,0.15); z-index:200;">
     <div style="display:flex;flex-wrap:wrap;gap:8px;width:230px;">
       <button class="emoji" style="background:none;border:none;font-size:22px;cursor:pointer">😀</button>
-      <button class="emoji" style="background:none;border:none;font-size:22px;cursor:pointer">😂</button>
-      <button class="emoji" style="background:none;border:none;font-size:22px;cursor:pointer">😍</button>
-      <button class="emoji" style="background:none;border:none;font-size:22px;cursor:pointer">😮</button>
-      <button class="emoji" style="background:none;border:none;font-size:22px;cursor:pointer">😢</button>
-      <button class="emoji" style="background:none;border:none;font-size:22px;cursor:pointer">👍</button>
-      <button class="emoji" style="background:none;border:none;font-size:22px;cursor:pointer">🙏</button>
-      <button class="emoji" style="background:none;border:none;font-size:22px;cursor:pointer">🔥</button>
+      <button class="emoji">😂</button>
+      <button class="emoji">😍</button>
+      <button class="emoji">😮</button>
+      <button class="emoji">😢</button>
+      <button class="emoji">👍</button>
+      <button class="emoji">🙏</button>
+      <button class="emoji">🔥</button>
     </div>
   </div>
 
-  <!-- FOOTER -->
-  <footer style="text-align:center;margin-top:14px;">
-    <a href="privacy.html" style="color:#ffffff;">Privacy Policy</a> •
-    <a href="terms.html" style="color:#ffffff;">Terms</a>
-  </footer>
+  
 
 <script>
 (() => {
-    const socket = io();
+    // Use local socket automatically available inside WebView
+    const socket = io("https://blinkchat-i72t.onrender.com", {
+      transports: ["websocket", "polling"]
+    });
 
     const params = new URLSearchParams(window.location.search);
     const roomId = params.get("room");
@@ -99,7 +98,7 @@
     const expireAt = Number(params.get("expireAt"));
 
     const messagesDiv = document.getElementById("messages");
-    const input = document.getElementById("messageInput");
+    const input = document.getElementById("messageInput"); // Target for saving/restoring draft
     const sendBtn = document.getElementById("sendBtn");
     const timerBox = document.getElementById("timerBox");
     const typingIndicator = document.getElementById("typingIndicator");
@@ -109,23 +108,46 @@
 
     document.getElementById("roomIdBox").textContent = `Room: ${roomId}`;
 
-    // NAME HANDLING
-    let myName = localStorage.getItem("blinkchat_name");
-    if (!myName) {
-        myName = prompt("Enter your name:")?.trim() || "Anonymous";
-        localStorage.setItem("blinkchat_name", myName);
-    }
+    let myName = localStorage.getItem("blinkchat_name") || "Anonymous";
+    // Add this immediately after the input variable declaration in chat.html
+    input.addEventListener('input', function () {
+    this.style.height = 'auto'; // Reset height to recalculate scrollHeight
+    this.style.height = (this.scrollHeight) + 'px'; // Set height to fit content
+});
 
+    // ----------------------------------------------------
+    // PART 1: RESTORE DRAFT ON PAGE LOAD (The Fix)
+    // Runs immediately if the page was forced to reload by the OS.
+    // ----------------------------------------------------
+    const savedDraft = localStorage.getItem('chat_draft');
+    if (savedDraft) {
+        input.value = savedDraft;
+        localStorage.removeItem('chat_draft'); // Clean up the storage
+    }
+    
+    const savedScroll = localStorage.getItem('chat_scroll');
+    if (savedScroll) {
+        messagesDiv.scrollTop = savedScroll;
+        localStorage.removeItem('chat_scroll'); // Clean up the storage
+    }
+    // ----------------------------------------------------
+
+
+    // JOIN ROOM
     socket.emit("joinRoom", { roomId, name: myName });
 
-    // TIMER
+    // ROOM TIMER
     const timerInterval = setInterval(() => {
         const diff = expireAt - Date.now();
         if (diff <= 0) {
             timerBox.textContent = "Expired";
             socket.emit("quitRoom", roomId);
             clearInterval(timerInterval);
-            return setTimeout(() => (window.location.href = "/"), 1500);
+
+            // Go back to home inside app
+            return setTimeout(() => {
+              window.location.href = "index.html";
+            }, 1500);
         }
 
         const m = Math.floor(diff / 60000);
@@ -149,11 +171,9 @@
         }, 1500);
     });
 
-    socket.on("hideTyping", () => {
-        typingIndicator.style.display = "none";
-    });
+    socket.on("hideTyping", () => typingIndicator.style.display = "none");
 
-    // EMOJI PANEL
+    // EMOJI
     emojiBtn.addEventListener("click", () => {
         emojiPanel.style.display = emojiPanel.style.display === "none" ? "block" : "none";
     });
@@ -165,23 +185,22 @@
         }
     });
 
-    // SEND MESSAGE
+    // SEND MESSAGE (Function definition remains the same)
     function sendMessage() {
         const msg = input.value.trim();
         if (!msg) return;
 
-        // encrypt + send
         const encrypted = CryptoJS.AES.encrypt(msg, secretKey).toString();
-        socket.emit("sendMessage", { roomId, message: encrypted });
+        socket.emit("sendMessage", { message: encrypted });
 
         addMessage(myName + " (You)", msg, "right");
         input.value = "";
     }
 
     sendBtn.addEventListener("click", sendMessage);
-    input.addEventListener("keydown", (e) => e.key === "Enter" && sendMessage());
+    input.addEventListener("keydown", e => e.key === "Enter" && sendMessage());
 
-    // RECEIVE MESSAGE
+    // RECEIVE MESSAGE (Logic remains the same)
     socket.on("newMessage", ({ message, from }) => {
         try {
             const decrypted = CryptoJS.AES.decrypt(message, secretKey).toString(CryptoJS.enc.Utf8);
@@ -191,9 +210,7 @@
         }
     });
 
-    socket.on("systemMessage", (msg) => {
-        addMessage("System", msg, "center");
-    });
+    socket.on("systemMessage", msg => addMessage("System", msg, "center"));
 
     function addMessage(name, text, side) {
         const div = document.createElement("div");
@@ -207,7 +224,7 @@
         }
 
         const body = document.createElement("div");
-        body.style.whiteSpace = 'pre-wrap';
+        body.style.whiteSpace = "pre-wrap";
         body.textContent = text;
         div.appendChild(body);
 
@@ -215,21 +232,28 @@
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
     }
 
-    // QUIT button behavior
+    // QUIT (Logic remains the same)
     quitBtn.addEventListener("click", () => {
       if (!confirm("Leave this chat room now?")) return;
 
-      // ask whether to remove saved name
-      const removeName = confirm("Also remove your saved display name from this device?");
+      const removeName = confirm("Remove your saved display name?");
       if (removeName) localStorage.removeItem("blinkchat_name");
 
-      // emit quit and go home
       socket.emit("quitRoom", roomId);
-      window.location.href = "/";
+      window.location.href = "index.html";
     });
+    
+    // ----------------------------------------------------
+    // PART 2: SAVE DRAFT WHEN PAGE IS HIDDEN (The Fix)
+    // Fired right before the page process is killed by the OS.
+    // ----------------------------------------------------
+    window.addEventListener('pagehide', () => {
+        localStorage.setItem('chat_draft', input.value);
+        localStorage.setItem('chat_scroll', messagesDiv.scrollTop);
+    });
+    // ----------------------------------------------------
 
 })();
 </script>
-
 </body>
 </html>
