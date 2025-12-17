@@ -15,6 +15,37 @@ html, body {
     height: 100%;
     width: 100%;
 }
+/* -------------------------
+   Logo Styling
+   ------------------------- */
+.sm-logo-container {
+    width: 100%;
+    /* The gap between the header/tagline and the buttons */
+    padding: 10px 0 12px 1; 
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.sm-logo-img {
+    /* Define the max size for the logo */
+    max-width: 280px; 
+    height: auto;
+    /* Transition for smooth resizing on different screens */
+    transition: max-width 0.3s ease;
+}
+
+/* Adjust size for smaller mobile screens */
+@media (max-width: 600px) {
+    .sm-logo-img {
+        /* Reduce size slightly on mobile */
+        max-width: 200px; 
+    }
+    .sm-logo-container {
+        /* Reduce vertical spacing on small screens */
+        padding: 10px 0 20px 0; 
+    }
+}
 
 /* -------------------------
    Page background & Animation
