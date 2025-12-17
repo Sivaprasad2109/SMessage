@@ -13,8 +13,6 @@
 <body class="sm-page-bg">
 
   <main class="sm-center-wrap">
-
-    <!-- Join Card -->
     <section class="sm-app-card">
       <header class="sm-card-header">
         <h1 class="sm-app-title">Join Chat Room</h1>
@@ -29,11 +27,12 @@
         style="width:100%; font-size:1rem;"
       />
 
+      <div id="roomDisplay" style="margin: 15px 0; font-weight: 600; color: #0a3d91;"></div>
+
       <button id="joinBtn" class="sm-btn sm-big">Join Chat</button>
 
       <div id="status" style="margin-top:10px;color:#455670;font-size:0.9rem;"></div>
 
-      <!-- Footer Links -->
       <footer class="sm-card-footer">
         <div class="sm-footer-links">
           <a href="privacy.html">Privacy Policy</a>
@@ -46,18 +45,27 @@
 <script>
 (() => {
   const params = new URLSearchParams(window.location.search);
-  const roomId = params.get("room");
-  const key = params.get("key");
+  const roomId = params.get("room"); // This is now the 6-digit passcode
+  let key = params.get("key");      // Encryption key
   const expireAt = params.get("expireAt");
 
   const joinBtn = document.getElementById("joinBtn");
   const nameInput = document.getElementById("nameInput");
+  const roomDisplay = document.getElementById("roomDisplay");
 
-  // Validate link
-  if (!roomId || !key) {
-    alert("Invalid or expired chat link!");
-    window.location.href = "index.html";   // FIXED for app
+  // Validate session
+  if (!roomId) {
+    alert("Invalid room passcode!");
+    window.location.href = "index.html";
     return;
+  }
+
+  // Show the user which room they are joining
+  roomDisplay.textContent = `Joining Room: ${roomId}`;
+
+  // Check if we have a locally stored key (if the creator is the one joining)
+  if (!key) {
+    key = localStorage.getItem(`key_${roomId}`);
   }
 
   // Autofill saved name
@@ -69,9 +77,13 @@
     const name = nameInput.value.trim() || "Anonymous";
     localStorage.setItem("blinkchat_name", name);
 
-    // Internal navigation (not browser)
+    // If there is still no key (for the joiner), they can enter the room, 
+    // but CryptoJS will show a decryption error unless the creator shares the key.
+    // In a passcode system, you might consider using the passcode AS the key 
+    // if 100% security isn't required, or prompting for a key here.
+    
     window.location.href =
-      `chat.html?room=${roomId}&key=${key}&expireAt=${expireAt}`;
+      `chat.html?room=${roomId}&key=${key || ''}&expireAt=${expireAt}`;
   });
 })();
 </script>
