@@ -6,7 +6,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>SMessage</title>
 
-  <!-- Font -->
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
 </head>
@@ -16,222 +15,173 @@
     <section class="sm-app-card" role="region" aria-labelledby="app-title">
       <header class="sm-card-header">
         <h1 id="app-title" class="sm-app-title">SMessage <span class="sm-bubble">💬</span></h1>
-        <p class="sm-subtitle">Create a private chat room with one click. No sign-up. End-to-end encrypted.</p>
+        <p class="sm-subtitle">Secure temporary chat rooms. No sign-up. End-to-end encrypted.</p>
       </header>
 
-      <!-- Disclaimer -->
-      <div class="sm-disclaimer-box">
-        <strong>⚠️ Disclaimer:</strong> SMessage provides private encrypted chat rooms. Users are responsible
-        for their own messages. Illegal, harmful, or abusive use is strictly prohibited.
+      <div class="sm-logo-container">
+        <img src="SMessage.png" alt="SMessage Logo" class="sm-logo-img">
       </div>
 
-      <!-- Data Safety -->
-      <div class="sm-data-safety" aria-label="Data safety summary">
-        <h3>🔐 Data Safety Summary</h3>
-        <ul>
-          <li><strong>No personal data collected.</strong></li>
-          <li><strong>No third-party sharing.</strong></li>
-          <li><strong>End-to-end encrypted chats.</strong></li>
-          <li><strong>Temporary room data only.</strong></li>
-          <li><strong>No ads or third-party SDKs.</strong></li>
-        </ul>
-      </div>
-
-      <!-- Buttons -->
       <div class="sm-cta-row">
         <button id="createRoomBtn" class="sm-btn sm-btn-primary sm-big">Create Room</button>
         <button id="openJoinWindowBtn" class="sm-btn sm-btn-outline sm-big">Join Room</button>
       </div>
 
-      <!-- Room link display (dynamic) -->
       <div id="linkDisplay" class="sm-link-display" aria-live="polite"></div>
 
-      <!-- Join popup -->
       <div id="joinRoomPopup" class="sm-modal" role="dialog" aria-modal="true" aria-hidden="true">
         <div class="sm-modal-inner" role="document">
-          <h4>Paste Room Link</h4>
-          <input id="joinRoomInput" type="text" placeholder="https://example.com/join.html?room=..." />
+          <h4>Enter Room Passcode</h4>
+          <p style="font-size: 0.8rem; color: #666; margin-bottom: 10px;">Ask your friend for their 6-digit code.</p>
+          <input id="joinRoomInput" type="number" placeholder="000000" 
+                 style="text-align: center; font-size: 1.5rem; letter-spacing: 8px;"
+                 oninput="if(this.value.length > 6) this.value = this.value.slice(0, 6);" />
+          
           <div class="sm-modal-actions">
-            <button id="joinRoomSubmit" class="sm-btn sm-btn-primary">Join</button>
+            <button id="joinRoomSubmit" class="sm-btn sm-btn-primary">Connect</button>
             <button id="closeJoinPopup" class="sm-btn sm-btn-ghost">Cancel</button>
           </div>
         </div>
       </div>
+      
       <div id="termsModal" class="sm-modal" role="dialog" aria-modal="true" aria-hidden="true">
-  <div class="sm-modal-inner" role="document" style="max-width: 500px;">
-    <h4>SMessage Terms & Conditions</h4>
-    <div style="height: 180px; overflow-y: scroll; padding: 10px; border: 1px solid #ddd; font-size: 0.85rem; line-height: 1.4;">
-        <p>By using SMessage, you agree to these Terms of Service. You must be at least 13 years old to use this service. You agree not to use this service for illegal, harmful, or abusive activities. SMessage is not responsible for the content of encrypted communications. All messages are temporary and deleted upon room expiration.</p>
-        <p style="margin-top: 10px;">Please read the full <a href="terms.html" target="_blank" style="color:#0a53c9;">Terms of Service</a> and <a href="privacy.html" target="_blank" style="color:#0a53c9;">Privacy Policy</a> before proceeding.</p>
-    </div>
-    
-    <div style="display: flex; align-items: center; gap: 10px; margin-top: 15px;">
-        <input type="checkbox" id="acceptTermsCheckbox" style="width: 20px; height: 20px; margin: 0;">
-        <label for="acceptTermsCheckbox" style="font-size: 0.95rem; color: #333;">I have read and agree to the Terms & Conditions.</label>
-    </div>
+        <div class="sm-modal-inner" role="document" style="max-width: 500px;">
+          <h4>SMessage Terms & Conditions</h4>
+          <div style="height: 180px; overflow-y: scroll; padding: 10px; border: 1px solid #ddd; font-size: 0.85rem; line-height: 1.4;">
+            <p>By using SMessage, you agree to these Terms of Service. All messages are temporary and deleted upon room expiration.</p>
+            <p style="margin-top: 10px;">Please read the full <a href="terms.html" target="_blank" style="color:#0a53c9;">Terms of Service</a> and <a href="privacy.html" target="_blank" style="color:#0a53c9;">Privacy Policy</a>.</p>
+          </div>
+          <div style="display: flex; align-items: center; gap: 10px; margin-top: 15px;">
+            <input type="checkbox" id="acceptTermsCheckbox" style="width: 20px; height: 20px; margin: 0;">
+            <label for="acceptTermsCheckbox" style="font-size: 0.95rem; color: #333;">I agree to the Terms & Conditions.</label>
+          </div>
+          <button id="agreeAndContinueBtn" class="sm-btn" disabled style="margin-top: 10px; width: 100%; opacity: 0.5;">Agree and Continue</button>
+        </div>
+      </div>
 
-    <button id="agreeAndContinueBtn" class="sm-btn" disabled style="margin-top: 10px; width: 100%; opacity: 0.5;">Agree and Continue</button>
-  </div>
-</div>
-
-      <!-- Footer links -->
       <footer class="sm-card-footer">
         <div class="sm-footer-links">
           <a href="privacy.html">Privacy Policy</a>
           <a href="terms.html">Terms of Service</a>
         </div>
-
         <div class="sm-footer-note">
-          <small>🔒 Messages are encrypted in your browser. No one — not even us — can read them.</small>
+          <small>🔒 Passcodes link you to encrypted sessions. No data is stored on our servers.</small>
         </div>
       </footer>
     </section>
   </main>
 
-  <!-- Socket & Crypto -->
   <script src="crypto-js/crypto-js.js"></script>
   <script src="https://blinkchat-i72t.onrender.com/socket.io/socket.io.js"></script>
 
-  <script>
+<script>
 window.addEventListener("load", () => {
 
   const socket = io("https://blinkchat-i72t.onrender.com", {
     transports: ["websocket", "polling"]
   });
-  // Add these new variable declarations at the top of your script:
-const termsModal = document.getElementById('termsModal');
-const acceptTermsCheckbox = document.getElementById('acceptTermsCheckbox');
-const agreeAndContinueBtn = document.getElementById('agreeAndContinueBtn');
 
-// --- T&C LOGIC ---
-if (!localStorage.getItem('sm_terms_accepted')) {
-    // Show the modal immediately if they haven't accepted
-    termsModal.classList.add('sm-modal-open');
-    termsModal.setAttribute('aria-hidden', 'false');
-}
-
-// Enable the button only when the checkbox is checked
-acceptTermsCheckbox.addEventListener('change', () => {
-    agreeAndContinueBtn.disabled = !acceptTermsCheckbox.checked;
-    agreeAndContinueBtn.style.opacity = acceptTermsCheckbox.checked ? 1 : 0.5;
-});
-
-// Hide modal and save status when 'Agree' is clicked
-agreeAndContinueBtn.addEventListener('click', () => {
-    localStorage.setItem('sm_terms_accepted', 'true');
-    termsModal.classList.remove('sm-modal-open');
-    termsModal.setAttribute('aria-hidden', 'true');
-    // If you initially hid the main content in CSS, show it here:
-    // document.querySelector('.sm-center-wrap').style.display = 'flex'; 
-});
-
-  const createBtn = document.getElementById('createRoomBtn');
   const linkDisplay = document.getElementById('linkDisplay');
+  const createBtn = document.getElementById('createRoomBtn');
 
-  // Create room
+  // 1. Create room logic
   createBtn.addEventListener('click', () => {
-    createBtn.disabled = true;
-    createBtn.textContent = 'Creating Room...';
-    socket.emit('createRoom');
+      createBtn.disabled = true;
+      createBtn.textContent = 'Generating Code...';
+      socket.emit('createRoom');
   });
 
-  socket.on('roomCreated', ({ roomId, expireAt }) => {
+  socket.on('roomCreated', ({ passcode, roomId, expireAt }) => {
     createBtn.disabled = false;
     createBtn.textContent = 'Create Room';
 
+    // Generate local encryption key (never sent to server)
     const secretKey = CryptoJS.lib.WordArray.random(16).toString();
-
-    // LOCAL join.html instead of full domain
-    const link = `join.html?room=${roomId}&key=${secretKey}&expireAt=${expireAt}`;
+    
+    // Save the key locally so the creator can use it when they redirect
+    localStorage.setItem(`key_${passcode}`, secretKey);
 
     linkDisplay.innerHTML = `
-      <div class="sm-link-box">
-        <div class="sm-link-label">Share this link with your friend:</div>
-        <div class="sm-link-row">
-          <input id="roomLinkInput" class="sm-link-input" type="text" value="${link}" readonly />
-          <button id="copyBtn" class="sm-btn sm-btn-copy">Copy</button>
+      <div class="sm-link-box" style="text-align: center;">
+        <div class="sm-link-label">Your 6-Digit Passcode:</div>
+        <div style="font-size: 2.5rem; font-weight: bold; color: #0a3d91; letter-spacing: 5px; margin: 15px 0;">
+          ${passcode}
         </div>
         <div class="sm-meta">
-          <span>Room expires at: ${new Date(expireAt).toLocaleTimeString()}</span>
+          <span>Give this code to your friend</span><br>
           <span id="countdown" class="sm-countdown"></span>
         </div>
-        <div id="copyStatus" class="sm-copy-status" aria-hidden="true">✔ Copied!</div>
       </div>
     `;
 
-    // Countdown redirect
     let countdown = 40;
     const countdownEl = document.getElementById('countdown');
     const t = setInterval(() => {
       countdown--;
-      countdownEl.textContent = ` • Redirecting in ${countdown}s`;
+      countdownEl.textContent = ` • Redirecting to chat in ${countdown}s`;
       if (countdown <= 0) {
         clearInterval(t);
-
-        // LOCAL redirect (inside app)
-        window.location.href = `join.html?room=${roomId}&key=${secretKey}&expireAt=${expireAt}`;
+        window.location.href = `join.html?room=${passcode}&key=${secretKey}&expireAt=${expireAt}`;
       }
     }, 1000);
   });
 
-  // Copy button
-  document.addEventListener('click', (e) => {
-    if (e.target && e.target.id === 'copyBtn') {
-      const linkInput = document.getElementById('roomLinkInput');
-      const copyStatus = document.getElementById('copyStatus');
+  // 2. Join room logic
+  const joinBtnOpen = document.getElementById('openJoinWindowBtn');
+  const joinRoomPopup = document.getElementById('joinRoomPopup');
+  const joinSubmit = document.getElementById('joinRoomSubmit');
+  const joinInput = document.getElementById('joinRoomInput');
+  const closeJoinPopup = document.getElementById('closeJoinPopup');
 
-      linkInput.select();
-      navigator.clipboard.writeText(linkInput.value).then(() => {
-        copyStatus.style.opacity = '1';
-        setTimeout(() => copyStatus.style.opacity = '0', 1500);
-      });
-    }
+  joinBtnOpen.addEventListener('click', () => {
+    joinRoomPopup.classList.add('sm-modal-open');
+    joinRoomPopup.setAttribute('aria-hidden', 'false');
+    setTimeout(() => joinInput.focus(), 50); 
   });
 
-  // Join popup
-  // ... existing JavaScript code ...
-
-// Join popup elements
-const joinBtnOpen = document.getElementById('openJoinWindowBtn');
-const joinPopup = document.getElementById('joinRoomPopup');
-const joinSubmit = document.getElementById('joinRoomSubmit');
-const joinInput = document.getElementById('joinRoomInput');
-const closeJoinPopup = document.getElementById('closeJoinPopup');
-
-// --- FIXED OPEN LOGIC ---
-joinBtnOpen.addEventListener('click', () => {
-  // 1. Show the modal visually (triggers CSS animation)
-  joinPopup.classList.add('sm-modal-open');
-  // 2. Correctly set aria-hidden to false (accessible)
-  joinPopup.setAttribute('aria-hidden', 'false');
-  
-  // 3. Focus after a short delay (for animation)
-  setTimeout(() => {
-      joinInput.focus();
-  }, 50); 
-});
-
-// --- FIXED CLOSE LOGIC ---
-closeJoinPopup.addEventListener('click', () => {
-  // 1. Hide the modal visually (triggers CSS animation)
-  joinPopup.classList.remove('sm-modal-open');
-  // 2. Correctly set aria-hidden to true (hidden)
-  joinPopup.setAttribute('aria-hidden', 'true');
-  joinInput.value = '';
-  
-  // 3. Return focus to the button that opened it (good practice)
-  joinBtnOpen.focus();
-});
-
+  closeJoinPopup.addEventListener('click', () => {
+    joinRoomPopup.classList.remove('sm-modal-open');
+    joinRoomPopup.setAttribute('aria-hidden', 'true');
+  });
 
   joinSubmit.addEventListener('click', () => {
-    const link = joinInput.value.trim();
-    if (!link) return alert('Please paste a valid link');
+    const passcode = joinInput.value.trim();
+    if (passcode.length !== 6) return alert('Please enter a 6-digit passcode');
 
-    // INTERNAL navigation
-    window.location.href = link;
+    // Emit to server to check if passcode exists
+    socket.emit('joinRoom', { passcode: passcode });
   });
 
+  // Server confirms the passcode is valid
+  socket.on('joinSuccess', ({ roomId, expireAt }) => {
+      const passcode = joinInput.value.trim();
+      // In a passcode system, users share the key manually or via the app
+      // Here we redirect to join.html. Note: Joiner needs the 'key' to decrypt.
+      window.location.href = `join.html?room=${passcode}&expireAt=${expireAt}`;
+  });
+
+  socket.on('systemMessage', (msg) => {
+      if (msg.includes("Invalid")) alert(msg);
+  });
+
+  // T&C logic (Unchanged)
+  const termsModal = document.getElementById('termsModal');
+  const acceptTermsCheckbox = document.getElementById('acceptTermsCheckbox');
+  const agreeAndContinueBtn = document.getElementById('agreeAndContinueBtn');
+
+  if (!localStorage.getItem('sm_terms_accepted')) {
+      termsModal.classList.add('sm-modal-open');
+  }
+
+  acceptTermsCheckbox.addEventListener('change', () => {
+      agreeAndContinueBtn.disabled = !acceptTermsCheckbox.checked;
+      agreeAndContinueBtn.style.opacity = acceptTermsCheckbox.checked ? 1 : 0.5;
+  });
+
+  agreeAndContinueBtn.addEventListener('click', () => {
+      localStorage.setItem('sm_terms_accepted', 'true');
+      termsModal.classList.remove('sm-modal-open');
+  });
 });
 </script>
 </body>
