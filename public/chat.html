@@ -87,29 +87,28 @@
 
 <script>
 (() => {
-    // 1. Initialize Socket.io
+    // 1. Initialize Socket.io with auto-reconnection settings
     const socket = io("https://blinkchat-i72t.onrender.com", {
-      transports: ["websocket", "polling"]
+      transports: ["websocket", "polling"],
+      reconnection: true,
+      reconnectionAttempts: 10,
+      reconnectionDelay: 1000
     });
 
     const params = new URLSearchParams(window.location.search);
     
-    // --- PART 1: SESSION PERSISTENCE (The Fix for App Switching) ---
-    // We try to get data from the URL, but if the app reloaded, we use LocalStorage.
+    // --- PART 1: SESSION PERSISTENCE ---
     let roomId = params.get("room") || localStorage.getItem("last_room_id");
     let passcode = params.get("p") || localStorage.getItem("last_passcode");
     let secretKey = params.get("key") || localStorage.getItem("last_secret_key");
     let expireAt = Number(params.get("expireAt")) || Number(localStorage.getItem("last_expire_at"));
 
-    // If we have data, save it immediately for the NEXT reload/switch
     if (roomId && secretKey) {
         localStorage.setItem("last_room_id", roomId);
         localStorage.setItem("last_passcode", passcode || "");
         localStorage.setItem("last_secret_key", secretKey);
         localStorage.setItem("last_expire_at", expireAt.toString());
     } else {
-        // If no data exists in URL or Storage, the session is dead.
-        console.error("No session data found. Redirecting...");
         window.location.href = "index.html";
         return;
     }
@@ -124,41 +123,40 @@
     const emojiPanel = document.getElementById("emojiPanel");
     const quitBtn = document.getElementById("quitBtn");
 
-    // Display the 6-digit passcode if we have it, otherwise show Room ID
     document.getElementById("roomIdBox").textContent = passcode ? `Code: ${passcode}` : `Room: ${roomId.substring(0,8)}`;
-    
     let myName = localStorage.getItem("blinkchat_name") || "Anonymous";
 
-    // --- UX POLISH: AUTO-EXPAND & DRAFT RESTORATION ---
+    // --- SOCKET LOGIC: THE RECONNECTION FIX ---
+    // This is the most important part: If the internet blips or you switch apps, 
+    // the socket re-joins the room automatically as soon as it reconnects.
+    socket.on("connect", () => {
+        console.log("Socket connected. Joining room...");
+        socket.emit("joinRoom", { 
+            roomId: roomId, 
+            passcode: passcode, 
+            name: myName 
+        });
+    });
+
+    // --- UX POLISH ---
     input.addEventListener('input', function () {
         this.style.height = 'auto'; 
         this.style.height = (this.scrollHeight) + 'px';
-        // Disable send button if empty
         sendBtn.disabled = this.value.trim().length === 0;
     });
 
-    // Restore message draft if the user was typing before switching apps
     const savedDraft = localStorage.getItem('chat_draft');
     if (savedDraft) {
         input.value = savedDraft;
         localStorage.removeItem('chat_draft');
-        input.dispatchEvent(new Event('input')); // Trigger resize
+        input.dispatchEvent(new Event('input'));
     }
     
-    // Restore scroll position
     const savedScroll = localStorage.getItem('chat_scroll');
     if (savedScroll) {
         messagesDiv.scrollTop = savedScroll;
         localStorage.removeItem('chat_scroll');
     }
-
-    // --- SOCKET LOGIC: JOINING ---
-    // We send BOTH roomId and passcode to the server so it can find the room either way
-    socket.emit("joinRoom", { 
-        roomId: roomId, 
-        passcode: passcode, 
-        name: myName 
-    });
 
     // --- ROOM EXPIRATION TIMER ---
     const timerInterval = setInterval(() => {
@@ -183,7 +181,6 @@
         clearTimeout(typingTimer);
         typingTimer = setTimeout(() => socket.emit("stopTyping", roomId), 1200);
     });
-
     socket.on("showTyping", () => { typingIndicator.style.display = "block"; });
     socket.on("hideTyping", () => { typingIndicator.style.display = "none"; });
 
@@ -192,7 +189,12 @@
         const msg = input.value.trim();
         if (!msg || !secretKey) return;
 
-        // Encrypt message locally before sending
+        // Ensure we are connected before sending
+        if (!socket.connected) {
+            alert("Waiting for connection...");
+            return;
+        }
+
         const encrypted = CryptoJS.AES.encrypt(msg, secretKey).toString();
         socket.emit("sendMessage", { message: encrypted });
 
@@ -212,13 +214,12 @@
 
     socket.on("newMessage", ({ message, from }) => {
         try {
-            // Decrypt incoming message using local secretKey
             const decrypted = CryptoJS.AES.decrypt(message, secretKey).toString(CryptoJS.enc.Utf8);
             if (decrypted) {
                 addMessage(from || "Friend", decrypted, "left");
             }
         } catch (e) {
-            addMessage("System", "[Decryption Error: Key Mismatch]", "center");
+            addMessage("System", "[Decryption Error]", "center");
         }
     });
 
@@ -269,8 +270,7 @@
         window.location.href = "index.html";
     });
 
-    // --- CRITICAL: THE SURVIVAL EVENT ---
-    // This fires the moment the user switches to WhatsApp or another app.
+    // --- THE SURVIVAL EVENT ---
     window.addEventListener('pagehide', () => {
         localStorage.setItem('chat_draft', input.value);
         localStorage.setItem('chat_scroll', messagesDiv.scrollTop);
@@ -280,3 +280,4 @@
 </script>
 </body>
 </html>
+
