@@ -18,37 +18,23 @@ const io = new Server(server, {
 
 const PORT = process.env.PORT || 3000;
 
-/* ===================== SECURITY ===================== */
-app.use(
-  helmet({
-    contentSecurityPolicy: false,
-    crossOriginEmbedderPolicy: false
-  })
-);
-
+app.use(helmet({ contentSecurityPolicy: false, crossOriginEmbedderPolicy: false }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(rateLimit({ windowMs: 60 * 1000, max: 100 }));
 
-app.use(
-  rateLimit({
-    windowMs: 60 * 1000,
-    max: 100
-  })
-);
-
-/* ===================== STATIC ===================== */
 app.use(express.static(path.join(__dirname, "public")));
 app.use("/crypto-js", express.static(path.join(__dirname, "node_modules/crypto-js")));
 
 /* ===================== ROOM STORE ===================== */
-const rooms = new Map();
+const rooms = new Map(); // passcode -> { roomId, expireAt }
+const roomIds = new Map(); // roomId -> passcode (for reverse lookup)
 
-/* Helper to generate a unique 6-digit passcode */
 function generateUniquePasscode() {
   let passcode;
   do {
     passcode = Math.floor(100000 + Math.random() * 900000).toString();
-  } while (rooms.has(passcode)); // Ensure we don't overwrite an existing room
+  } while (rooms.has(passcode));
   return passcode;
 }
 
@@ -59,24 +45,22 @@ io.on("connection", (socket) => {
   /* ---------- CREATE ROOM ---------- */
   socket.on("createRoom", () => {
     const passcode = generateUniquePasscode();
-    const roomId = crypto.randomBytes(16).toString("hex"); // Stronger internal ID
-    const expiresIn = 10 * 60 * 1000; // 10 minutes
+    const roomId = crypto.randomBytes(16).toString("hex");
+    const expiresIn = 40 * 60 * 1000; // Increased to 40 mins for stability
     const expireAt = Date.now() + expiresIn;
 
-    // Store internal roomId and expiry against the user-facing passcode
     rooms.set(passcode, { roomId, expireAt });
+    roomIds.set(roomId, passcode); // Reverse mapping
 
-    // Join the creator to the internal room immediately
     socket.join(roomId);
     socket.roomId = roomId;
 
-    // Send passcode back to creator
     socket.emit("roomCreated", { passcode, roomId, expireAt });
 
-    // Auto-cleanup
     setTimeout(() => {
       if (rooms.has(passcode)) {
         rooms.delete(passcode);
+        roomIds.delete(roomId);
         io.to(roomId).emit("systemMessage", "⚠️ Room expired.");
         io.socketsLeave(roomId);
       }
@@ -84,8 +68,18 @@ io.on("connection", (socket) => {
   });
 
   /* ---------- JOIN ROOM ---------- */
-  socket.on("joinRoom", ({ passcode, name }) => {
-    const roomData = rooms.get(passcode);
+  socket.on("joinRoom", ({ passcode, roomId, name }) => {
+    let roomData = null;
+
+    // 1. Try to find room by Passcode (Joiner)
+    if (passcode) {
+      roomData = rooms.get(String(passcode).trim());
+    } 
+    // 2. Try to find room by RoomId (Creator or Reload)
+    else if (roomId) {
+      const pCode = roomIds.get(roomId);
+      if (pCode) roomData = rooms.get(pCode);
+    }
     
     if (!roomData) {
       socket.emit("systemMessage", "Invalid or expired passcode.");
@@ -93,7 +87,7 @@ io.on("connection", (socket) => {
     }
 
     const members = io.sockets.adapter.rooms.get(roomData.roomId);
-    if (members && members.size >= 2) {
+    if (members && members.size >= 2 && !socket.rooms.has(roomData.roomId)) {
       socket.emit("systemMessage", "Room is full.");
       return;
     }
@@ -102,23 +96,20 @@ io.on("connection", (socket) => {
     socket.roomId = roomData.roomId;
     socket.userName = name || "Anonymous";
 
-    // Notify others in the room
-    io.to(roomData.roomId).emit("systemMessage", `${socket.userName} joined.`);
-    
-    // Crucial: Tell the joining client which internal roomId to use for redirection
+    // Inform the client exactly which IDs to use from now on
     socket.emit("joinSuccess", { 
         roomId: roomData.roomId, 
+        passcode: roomIds.get(roomData.roomId),
         expireAt: roomData.expireAt 
     });
+
+    io.to(roomData.roomId).emit("systemMessage", `${socket.userName} joined.`);
   });
 
-  /* ---------- MESSAGE ---------- */
+  /* ---------- MESSAGE & TYPING ---------- */
   socket.on("sendMessage", ({ message }) => {
     if (!socket.roomId) return;
-    socket.to(socket.roomId).emit("newMessage", {
-      message,
-      from: socket.userName
-    });
+    socket.to(socket.roomId).emit("newMessage", { message, from: socket.userName });
   });
 
   socket.on("typing", () => {
@@ -131,8 +122,8 @@ io.on("connection", (socket) => {
 
   socket.on("quitRoom", () => {
     if (!socket.roomId) return;
-    socket.leave(socket.roomId);
     socket.to(socket.roomId).emit("systemMessage", `${socket.userName} left.`);
+    socket.leave(socket.roomId);
   });
 
   socket.on("disconnect", () => {
