@@ -86,20 +86,27 @@ window.addEventListener("load", () => {
 
   // 1. Create room logic
   createBtn.addEventListener('click', () => {
-      createBtn.disabled = true;
-      createBtn.textContent = 'Generating Code...';
-      socket.emit('createRoom');
+    // Basic check to prevent multiple clicks
+    if (createBtn.disabled) return;
+    
+    createBtn.disabled = true;
+    createBtn.textContent = 'Generating Code...';
+    socket.emit('createRoom');
   });
 
   socket.on('roomCreated', ({ passcode, roomId, expireAt }) => {
     createBtn.disabled = false;
     createBtn.textContent = 'Create Room';
 
-    // Generate local encryption key (never sent to server)
+    // 1. Generate local encryption key (never sent to server)
     const secretKey = CryptoJS.lib.WordArray.random(16).toString();
     
-    // Save the key locally so the creator can use it when they redirect
-    localStorage.setItem(`key_${passcode}`, secretKey);
+    // 2. CRITICAL: Save all parameters to survive app-switching/reloads
+    // We store the passcode for the user, but the roomId for the socket
+    localStorage.setItem('saved_room_link', passcode); 
+    localStorage.setItem('saved_secret_key', secretKey);
+    localStorage.setItem('saved_room_id', roomId); 
+    localStorage.setItem('saved_expire_at', expireAt);
 
     linkDisplay.innerHTML = `
       <div class="sm-link-box" style="text-align: center;">
@@ -118,10 +125,23 @@ window.addEventListener("load", () => {
     const countdownEl = document.getElementById('countdown');
     const t = setInterval(() => {
       countdown--;
-      countdownEl.textContent = ` • Redirecting to chat in ${countdown}s`;
+      
+      localStorage.setItem('saved_redirect_seconds', countdown.toString());
+      
+      if (countdownEl) {
+        countdownEl.textContent = ` • Redirecting to chat in ${countdown}s`;
+      }
+
       if (countdown <= 0) {
         clearInterval(t);
-        window.location.href = `join.html?room=${passcode}&key=${secretKey}&expireAt=${expireAt}`;
+        
+        // Clean up temporary index storage
+        localStorage.removeItem('saved_room_link');
+        localStorage.removeItem('saved_redirect_seconds');
+        
+        // IMPORTANT: We redirect using the roomId so chat.html knows the socket address
+        // but we can keep the passcode in the URL for reference if needed
+        window.location.href = `join.html?room=${roomId}&p=${passcode}&key=${secretKey}&expireAt=${expireAt}`;
       }
     }, 1000);
   });
@@ -148,23 +168,28 @@ window.addEventListener("load", () => {
     const passcode = joinInput.value.trim();
     if (passcode.length !== 6) return alert('Please enter a 6-digit passcode');
 
+    joinSubmit.disabled = true;
+    joinSubmit.textContent = "Connecting...";
+    
     // Emit to server to check if passcode exists
     socket.emit('joinRoom', { passcode: passcode });
   });
 
-  // Server confirms the passcode is valid
-  socket.on('joinSuccess', ({ roomId, expireAt }) => {
-      const passcode = joinInput.value.trim();
-      // In a passcode system, users share the key manually or via the app
-      // Here we redirect to join.html. Note: Joiner needs the 'key' to decrypt.
-      window.location.href = `join.html?room=${passcode}&expireAt=${expireAt}`;
+  // Server confirms the passcode is valid and sends the REAL roomId
+  socket.on('joinSuccess', ({ roomId, passcode, expireAt }) => {
+      // Success! Move to join.html using the internal roomId
+      window.location.href = `join.html?room=${roomId}&p=${passcode}&expireAt=${expireAt}`;
   });
 
   socket.on('systemMessage', (msg) => {
-      if (msg.includes("Invalid")) alert(msg);
+      if (msg.includes("Invalid") || msg.includes("expired") || msg.includes("full")) {
+          alert(msg);
+          joinSubmit.disabled = false;
+          joinSubmit.textContent = "Connect";
+      }
   });
 
-  // T&C logic (Unchanged)
+  // T&C logic
   const termsModal = document.getElementById('termsModal');
   const acceptTermsCheckbox = document.getElementById('acceptTermsCheckbox');
   const agreeAndContinueBtn = document.getElementById('agreeAndContinueBtn');
