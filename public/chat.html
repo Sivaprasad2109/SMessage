@@ -87,29 +87,34 @@
 
 <script>
 (() => {
+    // 1. Initialize Socket.io
     const socket = io("https://blinkchat-i72t.onrender.com", {
       transports: ["websocket", "polling"]
     });
 
     const params = new URLSearchParams(window.location.search);
     
-    // --- PART 1: SESSION PERSISTENCE (THE FIX) ---
-    // Try to get params from URL, if not there, try localStorage
+    // --- PART 1: SESSION PERSISTENCE (The Fix for App Switching) ---
+    // We try to get data from the URL, but if the app reloaded, we use LocalStorage.
     let roomId = params.get("room") || localStorage.getItem("last_room_id");
+    let passcode = params.get("p") || localStorage.getItem("last_passcode");
     let secretKey = params.get("key") || localStorage.getItem("last_secret_key");
     let expireAt = Number(params.get("expireAt")) || Number(localStorage.getItem("last_expire_at"));
 
-    // Save them immediately so they are available for the next reload
+    // If we have data, save it immediately for the NEXT reload/switch
     if (roomId && secretKey) {
         localStorage.setItem("last_room_id", roomId);
+        localStorage.setItem("last_passcode", passcode || "");
         localStorage.setItem("last_secret_key", secretKey);
         localStorage.setItem("last_expire_at", expireAt.toString());
     } else {
-        // If still no room data, we can't stay here
+        // If no data exists in URL or Storage, the session is dead.
+        console.error("No session data found. Redirecting...");
         window.location.href = "index.html";
         return;
     }
 
+    // --- UI ELEMENTS ---
     const messagesDiv = document.getElementById("messages");
     const input = document.getElementById("messageInput");
     const sendBtn = document.getElementById("sendBtn");
@@ -119,33 +124,43 @@
     const emojiPanel = document.getElementById("emojiPanel");
     const quitBtn = document.getElementById("quitBtn");
 
-    document.getElementById("roomIdBox").textContent = `Room: ${roomId}`;
+    // Display the 6-digit passcode if we have it, otherwise show Room ID
+    document.getElementById("roomIdBox").textContent = passcode ? `Code: ${passcode}` : `Room: ${roomId.substring(0,8)}`;
+    
     let myName = localStorage.getItem("blinkchat_name") || "Anonymous";
 
-    // Auto-expand textarea logic
+    // --- UX POLISH: AUTO-EXPAND & DRAFT RESTORATION ---
     input.addEventListener('input', function () {
         this.style.height = 'auto'; 
         this.style.height = (this.scrollHeight) + 'px';
+        // Disable send button if empty
+        sendBtn.disabled = this.value.trim().length === 0;
     });
 
-    // Restore Draft & Scroll
+    // Restore message draft if the user was typing before switching apps
     const savedDraft = localStorage.getItem('chat_draft');
     if (savedDraft) {
         input.value = savedDraft;
         localStorage.removeItem('chat_draft');
-        // Trigger resize
-        input.dispatchEvent(new Event('input'));
+        input.dispatchEvent(new Event('input')); // Trigger resize
     }
     
+    // Restore scroll position
     const savedScroll = localStorage.getItem('chat_scroll');
     if (savedScroll) {
         messagesDiv.scrollTop = savedScroll;
         localStorage.removeItem('chat_scroll');
     }
 
-    // --- SOCKET LOGIC ---
-    socket.emit("joinRoom", { roomId, name: myName });
+    // --- SOCKET LOGIC: JOINING ---
+    // We send BOTH roomId and passcode to the server so it can find the room either way
+    socket.emit("joinRoom", { 
+        roomId: roomId, 
+        passcode: passcode, 
+        name: myName 
+    });
 
+    // --- ROOM EXPIRATION TIMER ---
     const timerInterval = setInterval(() => {
         const diff = expireAt - Date.now();
         if (diff <= 0) {
@@ -161,7 +176,7 @@
         timerBox.textContent = `${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
     }, 1000);
 
-    // Typing logic
+    // --- TYPING INDICATOR ---
     let typingTimer;
     input.addEventListener("input", () => {
         socket.emit("typing", roomId);
@@ -172,26 +187,38 @@
     socket.on("showTyping", () => { typingIndicator.style.display = "block"; });
     socket.on("hideTyping", () => { typingIndicator.style.display = "none"; });
 
-    // Send/Receive
+    // --- SEND & RECEIVE MESSAGES (E2EE) ---
     function sendMessage() {
         const msg = input.value.trim();
-        if (!msg) return;
+        if (!msg || !secretKey) return;
+
+        // Encrypt message locally before sending
         const encrypted = CryptoJS.AES.encrypt(msg, secretKey).toString();
         socket.emit("sendMessage", { message: encrypted });
+
         addMessage(myName + " (You)", msg, "right");
         input.value = "";
         input.style.height = 'auto';
+        sendBtn.disabled = true;
     }
 
     sendBtn.addEventListener("click", sendMessage);
-    input.addEventListener("keydown", e => e.key === "Enter" && sendMessage());
+    input.addEventListener("keydown", e => {
+        if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage();
+        }
+    });
 
     socket.on("newMessage", ({ message, from }) => {
         try {
+            // Decrypt incoming message using local secretKey
             const decrypted = CryptoJS.AES.decrypt(message, secretKey).toString(CryptoJS.enc.Utf8);
-            addMessage(from || "Friend", decrypted, "left");
+            if (decrypted) {
+                addMessage(from || "Friend", decrypted, "left");
+            }
         } catch (e) {
-            addMessage("System", "[Decryption Error]", "center");
+            addMessage("System", "[Decryption Error: Key Mismatch]", "center");
         }
     });
 
@@ -214,8 +241,23 @@
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
     }
 
+    // --- EMOJI PANEL ---
+    emojiBtn.addEventListener("click", () => {
+        emojiPanel.style.display = emojiPanel.style.display === "none" ? "block" : "none";
+    });
+
+    emojiPanel.addEventListener("click", (e) => {
+        if (e.target.classList.contains("emoji")) {
+            input.value += e.target.textContent;
+            input.focus();
+            sendBtn.disabled = false;
+        }
+    });
+
+    // --- EXIT & CLEANUP ---
     function cleanSession() {
         localStorage.removeItem("last_room_id");
+        localStorage.removeItem("last_passcode");
         localStorage.removeItem("last_secret_key");
         localStorage.removeItem("last_expire_at");
     }
@@ -227,7 +269,8 @@
         window.location.href = "index.html";
     });
 
-    // Save draft on background
+    // --- CRITICAL: THE SURVIVAL EVENT ---
+    // This fires the moment the user switches to WhatsApp or another app.
     window.addEventListener('pagehide', () => {
         localStorage.setItem('chat_draft', input.value);
         localStorage.setItem('chat_scroll', messagesDiv.scrollTop);
