@@ -45,30 +45,40 @@
 <script>
 (() => {
   const params = new URLSearchParams(window.location.search);
-  const roomId = params.get("room"); // This is now the 6-digit passcode
-  let key = params.get("key");      // Encryption key
+  
+  // roomId is the long hex ID from the server
+  const roomId = params.get("room"); 
+  // passcode (p) is the 6-digit code for display
+  const passcode = params.get("p");
+  // secretKey is for local encryption
+  let key = params.get("key");
   const expireAt = params.get("expireAt");
 
   const joinBtn = document.getElementById("joinBtn");
   const nameInput = document.getElementById("nameInput");
   const roomDisplay = document.getElementById("roomDisplay");
 
-  // Validate session
+  // Validate session - we need the internal roomId to proceed
   if (!roomId) {
-    alert("Invalid room passcode!");
+    alert("Invalid or expired session!");
     window.location.href = "index.html";
     return;
   }
 
-  // Show the user which room they are joining
-  roomDisplay.textContent = `Joining Room: ${roomId}`;
+  // Show the user the 6-digit code if available, otherwise the start of the Hex ID
+  roomDisplay.textContent = passcode ? `Joining Room: ${passcode}` : `Joining Room: ${roomId.substring(0, 8)}`;
 
-  // Check if we have a locally stored key (if the creator is the one joining)
+  // --- KEY RECOVERY LOGIC ---
+  // 1. If key isn't in URL, try to find it via passcode reference
+  if (!key && passcode) {
+    key = localStorage.getItem(`key_${passcode}`);
+  }
+  // 2. If still no key, check general last active key
   if (!key) {
-    key = localStorage.getItem(`key_${roomId}`);
+    key = localStorage.getItem("last_secret_key");
   }
 
-  // Autofill saved name
+  // Autofill saved display name
   const savedName = localStorage.getItem("blinkchat_name");
   if (savedName) nameInput.value = savedName;
 
@@ -77,13 +87,11 @@
     const name = nameInput.value.trim() || "Anonymous";
     localStorage.setItem("blinkchat_name", name);
 
-    // If there is still no key (for the joiner), they can enter the room, 
-    // but CryptoJS will show a decryption error unless the creator shares the key.
-    // In a passcode system, you might consider using the passcode AS the key 
-    // if 100% security isn't required, or prompting for a key here.
+    // Build the final chat URL
+    // We pass 'room' (ID), 'p' (Passcode), and 'key' (AES Key)
+    const chatUrl = `chat.html?room=${roomId}&p=${passcode || ''}&key=${key || ''}&expireAt=${expireAt}`;
     
-    window.location.href =
-      `chat.html?room=${roomId}&key=${key || ''}&expireAt=${expireAt}`;
+    window.location.href = chatUrl;
   });
 })();
 </script>
