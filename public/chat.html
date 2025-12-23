@@ -1,226 +1,79 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta name="theme-color" content="#0a3d91">
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SMessage Chat</title>
-
-  <link rel="stylesheet" href="style.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
-
-  <!-- LOCAL socket.io (server served inside app, not browser) -->
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SMessage Chat</title><link rel="stylesheet" href="style.css" />
   <script src="https://blinkchat-i72t.onrender.com/socket.io/socket.io.js"></script>
-
-  <!-- CryptoJS local path -->
   <script src="crypto-js/crypto-js.js"></script>
 </head>
-
 <body class="sm-page-bg">
-
   <main class="sm-chat-wrap">
-
-    <!-- HEADER -->
-    <header class="sm-chat-header" role="banner">
-      <div>
-        <div class="sm-chat-title">Private Chat Room</div>
-        <div class="sm-chat-sub">End-to-end encrypted</div>
-      </div>
-
+    <header class="sm-chat-header">
+      <div><div class="sm-chat-title">Private Room</div><div class="sm-chat-sub">Encrypted</div></div>
       <div style="display:flex; align-items:center; gap:12px;">
-        <div class="sm-room-meta" style="margin-right:6px;">
-          <span id="roomIdBox" class="sm-room-id"></span>
-          <span id="timerBox" class="sm-timer">00:00</span>
-        </div>
-
-        <button id="quitBtn"
-                class="sm-btn"
-                style="padding:8px 12px; font-size:0.92rem; border-radius:10px; background:#ffffff; color:#0a53c9; box-shadow:none;">
-          Quit
-        </button>
+        <span id="roomIdBox" class="sm-room-id"></span>
+        <span id="timerBox" class="sm-timer">00:00</span>
+        <button id="quitBtn" class="sm-btn" style="background:#fff; color:#0a53c9;">Quit</button>
       </div>
     </header>
-
-    <!-- CHAT AREA -->
-    <section class="sm-chat-card" role="main" aria-live="polite">
-
-      <div id="typingIndicator"
-           style="font-size:0.85rem;color:#6c84c5;display:none;text-align:center">
-        Friend is typing…
-      </div>
-
-      <div id="messages" class="sm-messages" aria-live="polite"></div>
-
+    <section class="sm-chat-card">
+      <div id="typingIndicator" style="display:none; text-align:center;">Friend is typing...</div>
+      <div id="messages" class="sm-messages"></div>
       <div class="sm-input-row">
-        <button id="emojiBtn" class="sm-emoji-btn">😊</button>
-        <textarea id="messageInput" class="sm-message-input" placeholder="Type a message..." rows="1" autocomplete="off"></textarea>
+        <textarea id="messageInput" class="sm-message-input" placeholder="Type..." rows="1"></textarea>
         <button id="sendBtn" class="sm-send-btn">Send</button>
       </div>
-
     </section>
-
-    <div class="sm-chat-note">Temporary encrypted room. No messages are stored.</div>
-    <footer style="text-align:center;margin-bottom:14px;">
-    <a href="privacy.html" style="color:#ffffff;">Privacy Policy</a> •
-    <a href="terms.html" style="color:#ffffff;">Terms</a>
-    </footer>
-
   </main>
-
-  <!-- EMOJI PANEL -->
-  <div id="emojiPanel"
-       style="display:none; position:fixed; bottom:90px; left:20px; background:#fff; border:1px solid #d7e1f5;
-              padding:10px; border-radius:10px; box-shadow:0px 12px 28px rgba(0,0,0,0.15); z-index:200;">
-    <div style="display:flex;flex-wrap:wrap;gap:8px;width:230px;">
-      <button class="emoji" style="background:none;border:none;font-size:22px;cursor:pointer">😀</button>
-      <button class="emoji">😂</button>
-      <button class="emoji">😍</button>
-      <button class="emoji">😮</button>
-      <button class="emoji">😢</button>
-      <button class="emoji">👍</button>
-      <button class="emoji">🙏</button>
-      <button class="emoji">🔥</button>
-    </div>
-  </div>
-
-  
-
 <script>
 (() => {
-    // 1. Initialize Socket.io with auto-reconnection settings
-    const socket = io("https://blinkchat-i72t.onrender.com", {
-      transports: ["websocket", "polling"],
-      reconnection: true,
-      reconnectionAttempts: 10,
-      reconnectionDelay: 1000
-    });
-
+    const socket = io("https://blinkchat-i72t.onrender.com", { transports: ["websocket", "polling"], reconnection: true });
     const params = new URLSearchParams(window.location.search);
     
-    // --- PART 1: SESSION PERSISTENCE ---
     let roomId = params.get("room") || localStorage.getItem("last_room_id");
     let passcode = params.get("p") || localStorage.getItem("last_passcode");
     let secretKey = params.get("key") || localStorage.getItem("last_secret_key");
     let expireAt = Number(params.get("expireAt")) || Number(localStorage.getItem("last_expire_at"));
 
-    if (roomId && secretKey) {
-        localStorage.setItem("last_room_id", roomId);
-        localStorage.setItem("last_passcode", passcode || "");
-        localStorage.setItem("last_secret_key", secretKey);
-        localStorage.setItem("last_expire_at", expireAt.toString());
-    } else {
-        window.location.href = "index.html";
-        return;
-    }
+    if (!roomId || roomId === "null") { window.location.href = "index.html"; return; }
 
-    // --- UI ELEMENTS ---
     const messagesDiv = document.getElementById("messages");
     const input = document.getElementById("messageInput");
     const sendBtn = document.getElementById("sendBtn");
-    const timerBox = document.getElementById("timerBox");
-    const typingIndicator = document.getElementById("typingIndicator");
-    const emojiBtn = document.getElementById("emojiBtn");
-    const emojiPanel = document.getElementById("emojiPanel");
-    const quitBtn = document.getElementById("quitBtn");
+    const myName = localStorage.getItem("blinkchat_name") || "Anonymous";
+    document.getElementById("roomIdBox").textContent = `Code: ${passcode}`;
 
-    document.getElementById("roomIdBox").textContent = passcode ? `Code: ${passcode}` : `Room: ${roomId.substring(0,8)}`;
-    let myName = localStorage.getItem("blinkchat_name") || "Anonymous";
-
-    // --- SOCKET LOGIC: THE RECONNECTION FIX ---
-    // This is the most important part: If the internet blips or you switch apps, 
-    // the socket re-joins the room automatically as soon as it reconnects.
+    // AUTO-REJOIN ON CONNECT
     socket.on("connect", () => {
-        console.log("Socket connected. Joining room...");
-        socket.emit("joinRoom", { 
-            roomId: roomId, 
-            passcode: passcode, 
-            name: myName 
-        });
+        socket.emit("joinRoom", { roomId, passcode, name: myName });
     });
 
-    // --- UX POLISH ---
-    input.addEventListener('input', function () {
-        this.style.height = 'auto'; 
-        this.style.height = (this.scrollHeight) + 'px';
-        sendBtn.disabled = this.value.trim().length === 0;
-    });
-
-    const savedDraft = localStorage.getItem('chat_draft');
-    if (savedDraft) {
-        input.value = savedDraft;
-        localStorage.removeItem('chat_draft');
-        input.dispatchEvent(new Event('input'));
-    }
-    
-    const savedScroll = localStorage.getItem('chat_scroll');
-    if (savedScroll) {
-        messagesDiv.scrollTop = savedScroll;
-        localStorage.removeItem('chat_scroll');
-    }
-
-    // --- ROOM EXPIRATION TIMER ---
     const timerInterval = setInterval(() => {
         const diff = expireAt - Date.now();
         if (diff <= 0) {
-            timerBox.textContent = "Expired";
             clearInterval(timerInterval);
-            socket.emit("quitRoom", roomId);
-            cleanSession();
-            setTimeout(() => { window.location.href = "index.html"; }, 1500);
-            return;
+            window.location.href = "index.html";
+        } else {
+            const m = Math.floor(diff / 60000), s = Math.floor((diff % 60000) / 1000);
+            document.getElementById("timerBox").textContent = `${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
         }
-        const m = Math.floor(diff / 60000);
-        const s = Math.floor((diff % 60000) / 1000);
-        timerBox.textContent = `${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
     }, 1000);
 
-    // --- TYPING INDICATOR ---
-    let typingTimer;
-    input.addEventListener("input", () => {
-        socket.emit("typing", roomId);
-        clearTimeout(typingTimer);
-        typingTimer = setTimeout(() => socket.emit("stopTyping", roomId), 1200);
-    });
-    socket.on("showTyping", () => { typingIndicator.style.display = "block"; });
-    socket.on("hideTyping", () => { typingIndicator.style.display = "none"; });
-
-    // --- SEND & RECEIVE MESSAGES (E2EE) ---
     function sendMessage() {
         const msg = input.value.trim();
-        if (!msg || !secretKey) return;
-
-        // Ensure we are connected before sending
-        if (!socket.connected) {
-            alert("Waiting for connection...");
-            return;
-        }
-
+        if (!msg || !secretKey || !socket.connected) return;
         const encrypted = CryptoJS.AES.encrypt(msg, secretKey).toString();
         socket.emit("sendMessage", { message: encrypted });
-
         addMessage(myName + " (You)", msg, "right");
         input.value = "";
-        input.style.height = 'auto';
-        sendBtn.disabled = true;
     }
 
     sendBtn.addEventListener("click", sendMessage);
-    input.addEventListener("keydown", e => {
-        if (e.key === "Enter" && !e.shiftKey) {
-            e.preventDefault();
-            sendMessage();
-        }
-    });
-
     socket.on("newMessage", ({ message, from }) => {
         try {
-            const decrypted = CryptoJS.AES.decrypt(message, secretKey).toString(CryptoJS.enc.Utf8);
-            if (decrypted) {
-                addMessage(from || "Friend", decrypted, "left");
-            }
-        } catch (e) {
-            addMessage("System", "[Decryption Error]", "center");
-        }
+            const dec = CryptoJS.AES.decrypt(message, secretKey).toString(CryptoJS.enc.Utf8);
+            if (dec) addMessage(from, dec, "left");
+        } catch (e) { addMessage("System", "[Decryption Error]", "center"); }
     });
 
     socket.on("systemMessage", msg => addMessage("System", msg, "center"));
@@ -228,56 +81,16 @@
     function addMessage(name, text, side) {
         const div = document.createElement("div");
         div.className = `sm-msg ${side}`;
-        if (side !== "center") {
-            const tag = document.createElement("div");
-            tag.style.cssText = "font-size:0.7rem;margin-bottom:4px;color:#6c84c5;";
-            tag.textContent = name;
-            div.appendChild(tag);
-        }
-        const body = document.createElement("div");
-        body.style.whiteSpace = "pre-wrap";
-        body.textContent = text;
-        div.appendChild(body);
+        div.innerHTML = `<div style="font-size:0.7rem;">${name}</div><div>${text}</div>`;
         messagesDiv.appendChild(div);
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
     }
 
-    // --- EMOJI PANEL ---
-    emojiBtn.addEventListener("click", () => {
-        emojiPanel.style.display = emojiPanel.style.display === "none" ? "block" : "none";
-    });
-
-    emojiPanel.addEventListener("click", (e) => {
-        if (e.target.classList.contains("emoji")) {
-            input.value += e.target.textContent;
-            input.focus();
-            sendBtn.disabled = false;
-        }
-    });
-
-    // --- EXIT & CLEANUP ---
-    function cleanSession() {
+    document.getElementById("quitBtn").addEventListener("click", () => {
         localStorage.removeItem("last_room_id");
-        localStorage.removeItem("last_passcode");
-        localStorage.removeItem("last_secret_key");
-        localStorage.removeItem("last_expire_at");
-    }
-
-    quitBtn.addEventListener("click", () => {
-        if (!confirm("Leave this chat room?")) return;
-        cleanSession();
-        socket.emit("quitRoom", roomId);
         window.location.href = "index.html";
     });
-
-    // --- THE SURVIVAL EVENT ---
-    window.addEventListener('pagehide', () => {
-        localStorage.setItem('chat_draft', input.value);
-        localStorage.setItem('chat_scroll', messagesDiv.scrollTop);
-    });
-
 })();
 </script>
 </body>
 </html>
-
