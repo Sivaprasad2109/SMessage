@@ -21,8 +21,8 @@ app.use(rateLimit({ windowMs: 60 * 1000, max: 100 }));
 app.use(express.static(path.join(__dirname, "public")));
 app.use("/crypto-js", express.static(path.join(__dirname, "node_modules/crypto-js")));
 
-const rooms = new Map(); // passcode -> { roomId, expireAt }
-const roomIds = new Map(); // roomId -> passcode
+const rooms = new Map(); 
+const roomIds = new Map(); 
 
 function generateUniquePasscode() {
   let passcode;
@@ -36,7 +36,7 @@ io.on("connection", (socket) => {
   socket.on("createRoom", () => {
     const passcode = generateUniquePasscode();
     const roomId = crypto.randomBytes(16).toString("hex");
-    const expiresIn = 15 * 60 * 1000; 
+    const expiresIn = 40 * 60 * 1000; 
     const expireAt = Date.now() + expiresIn;
 
     rooms.set(passcode, { roomId, expireAt });
@@ -69,9 +69,6 @@ io.on("connection", (socket) => {
       return;
     }
 
-    const members = io.sockets.adapter.rooms.get(roomData.roomId);
-    const isReconnecting = members && members.size > 0;
-
     socket.join(roomData.roomId);
     socket.roomId = roomData.roomId;
     socket.userName = name || "Anonymous";
@@ -82,9 +79,8 @@ io.on("connection", (socket) => {
         expireAt: roomData.expireAt 
     });
 
-    if (!isReconnecting) {
-      io.to(roomData.roomId).emit("systemMessage", `${socket.userName} joined.`);
-    }
+    // FIX: Notify everyone in the room that a user joined
+    io.to(roomData.roomId).emit("systemMessage", `${socket.userName} joined.`);
   });
 
   socket.on("sendMessage", ({ message }) => {
