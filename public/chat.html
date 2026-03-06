@@ -9,13 +9,18 @@
 <body class="sm-page-bg">
   <main class="sm-chat-wrap">
     <header class="sm-chat-header">
-      <div><div class="sm-chat-title">Private Room</div><div class="sm-chat-sub">Encrypted</div></div>
-      <div style="display:flex; align-items:center; gap:12px;">
-        <span id="roomIdBox" class="sm-room-id"></span>
-        <span id="timerBox" class="sm-timer">00:00</span>
-        <button id="quitBtn" class="sm-btn" style="background:#fff; color:#0a53c9;">Quit</button>
-      </div>
-    </header>
+  <div class="sm-header-info">
+    <div class="sm-chat-title" style="font-weight: 600;">Private Room</div>
+    <div class="sm-chat-sub" style="font-size: 0.75rem; opacity: 0.8;">Encrypted</div>
+  </div>
+  <div class="sm-room-meta">
+    <button id="reportBtn" class="sm-btn" style="background: rgba(255,255,255,0.15); color: #fff; padding: 6px 10px; font-size: 0.8rem; border: 1px solid rgba(255,255,255,0.3); margin-right: 5px;">🚩 Report</button>
+    
+    <span id="roomIdBox" style="font-size: 0.85rem; background: rgba(255,255,255,0.2); padding: 4px 8px; border-radius: 6px;"></span>
+    <span id="timerBox" style="font-family: monospace; font-weight: bold;">00:00</span>
+    <button id="quitBtn" class="sm-btn" style="background:#fff; color:#0a53c9; padding: 6px 12px; font-size: 0.85rem; border-radius: 8px;">Quit</button>
+  </div>
+</header>
     <section class="sm-chat-card">
       <div id="typingIndicator" style="display:none; text-align:center;">Friend is typing...</div>
       <div id="messages" class="sm-messages"></div>
@@ -60,13 +65,17 @@
     }, 1000);
 
     function sendMessage() {
-        const msg = input.value.trim();
-        if (!msg || !secretKey || !socket.connected) return;
-        const encrypted = CryptoJS.AES.encrypt(msg, secretKey).toString();
-        socket.emit("sendMessage", { message: encrypted });
-        addMessage(myName + " (You)", msg, "right");
-        input.value = "";
-    }
+    const msg = input.value.trim();
+    if (!msg || !secretKey || !socket.connected) return;
+
+    const encrypted = CryptoJS.AES.encrypt(msg, secretKey).toString();
+    socket.emit("sendMessage", { message: encrypted });
+    addMessage(myName + " (You)", msg, "right");
+
+    input.value = "";
+    input.style.height = "auto";   // ✅ reset textarea height
+}
+
 
     sendBtn.addEventListener("click", sendMessage);
     socket.on("newMessage", ({ message, from }) => {
@@ -74,6 +83,15 @@
             const dec = CryptoJS.AES.decrypt(message, secretKey).toString(CryptoJS.enc.Utf8);
             if (dec) addMessage(from, dec, "left");
         } catch (e) { addMessage("System", "[Decryption Error]", "center"); }
+    });
+    // Add this inside the script block in chat.html
+    socket.on("roomDestroyed", () => {
+    localStorage.removeItem("last_room_id");
+    localStorage.removeItem("last_passcode");
+    localStorage.removeItem("last_secret_key");
+    
+    alert("This session has been ended and deleted.");
+    window.location.href = "index.html";
     });
 
     socket.on("systemMessage", msg => addMessage("System", msg, "center"));
@@ -86,10 +104,59 @@
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
     }
 
+    // Replace your existing quitBtn listener in chat.html
     document.getElementById("quitBtn").addEventListener("click", () => {
+    if (confirm("Quit and delete chat history for everyone?")) {
+        socket.emit("destroyRoom"); // Tell server to wipe the room
         localStorage.removeItem("last_room_id");
+        localStorage.removeItem("last_passcode");
+        localStorage.removeItem("last_secret_key");
         window.location.href = "index.html";
+    }
     });
+    document.getElementById("reportBtn").addEventListener("click", () => {
+    // roomId and passcode are already accessible from your existing variables
+    if (confirm("Report this room for unusual activity or policy violations?")) {
+        const adminEmail = "sivamaha2109@gmail.com";
+        const subject = encodeURIComponent(`SMessage Report: Room ${passcode}`);
+        const body = encodeURIComponent(
+            `REPORT DETAILS\n` +
+            `--------------------------\n` +
+            `Room ID: ${roomId}\n` +
+            `Passcode: ${passcode}\n\n` +
+            `USER DESCRIPTION:\n` +
+            `Please describe the activity you are reporting:`
+        );
+        
+        // This opens the default email client on Android/iOS
+        window.location.href = `mailto:${adminEmail}?subject=${subject}&body=${body}`;
+        
+        alert("Report generated. Please send the email so we can take action.");
+    }
+    });
+    /* ===============================
+   Auto-grow textarea + Enter send
+   =============================== */
+
+input.addEventListener("input", () => {
+    input.style.height = "auto";
+    input.style.height = input.scrollHeight + "px";
+
+    if (input.scrollHeight > 110) {
+        input.style.height = "110px";
+        input.style.overflowY = "auto";
+    } else {
+        input.style.overflowY = "hidden";
+    }
+});
+
+input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();  // stop new line
+        sendMessage();       // send message
+    }
+});
+
 })();
 </script>
 </body>
