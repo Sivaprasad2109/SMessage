@@ -1,5 +1,6 @@
 /* ===========================================================
-   SMessage UPDATED SCROLLABLE CHAT LAYOUT
+   SMessage MASTER STYLESHEET
+   Includes: Global, Animations, Home, Join, and Compact Chat
    =========================================================== */
 
 /* -------------------------
@@ -15,11 +16,11 @@
 html, body {
     height: 100%;
     width: 100%;
-    overflow: hidden; /* Prevent the entire body from scrolling */
+    overflow: hidden; /* Prevents global scroll to maintain fixed app layout */
 }
 
 /* -------------------------
-   Logo Styling
+   Logo & Branding
    ------------------------- */
 .sm-logo-container {
     width: 100%;
@@ -35,7 +36,6 @@ html, body {
     transition: max-width 0.3s ease;
 }
 
-/* Adjust size for smaller mobile screens */
 @media (max-width: 600px) {
     .sm-logo-img {
         max-width: 200px; 
@@ -46,10 +46,10 @@ html, body {
 }
 
 /* -------------------------
-   Page background & Animation
+   Page Background & Animations
    ------------------------- */
 .sm-page-bg {
-    height: 100vh; /* Force full viewport height */
+    height: 100dvh; /* Dynamic viewport height for mobile browsers */
     width: 100vw;
     background: linear-gradient(135deg, #0a3d91, #1e62d0, #2f8bff);
     background-size: 400% 400%;
@@ -58,7 +58,7 @@ html, body {
     align-items: center;
     justify-content: center;
     position: relative;
-    padding: 10px; /* Padding for the chat wrap */
+    padding: 10px;
 }
 
 .sm-page-bg::before {
@@ -79,7 +79,7 @@ html, body {
 @keyframes fadeIn{ from{opacity:0; transform:scale(.98)} to{opacity:1; transform:scale(1)} }
 
 /* -------------------------
-   Card / Container (Home & Join)
+   App Cards (Home & Join Pages)
    ------------------------- */
 .sm-center-wrap {
     width: 100%;
@@ -87,20 +87,21 @@ html, body {
     justify-content: center;
     padding: 8px;
 }
+
 .sm-app-card {
-    width: min(94%, 720px);
+    width: min(94%, 500px); /* Constrained width for a mobile-app feel */
     background: #fff;
     border-radius: 20px;
-    padding: 22px;
+    padding: 24px;
     box-shadow: 0 14px 36px rgba(0, 0, 0, 0.18);
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 16px;
     align-items: center;
     animation: fadeIn .6s ease;
 }
 
-/* FIX: Standalone Input for Join Room (applies to join.html) */
+/* Join Room Specific Inputs */
 .sm-app-card > .sm-message-input {
     width: 100% !important;
     margin-bottom: 10px;
@@ -110,7 +111,6 @@ html, body {
     border: 1px solid #d7e1f5 !important;
 }
 
-/* Header */
 .sm-card-header { text-align: center; }
 .sm-app-title { font-size: 1.8rem; color: #0a3d91; margin-bottom: 6px; }
 .sm-subtitle { color: #56637a; font-size: 0.95rem; }
@@ -118,12 +118,12 @@ html, body {
 /* Buttons */
 .sm-cta-row { width: 100%; display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; }
 .sm-btn {
-    border: 0; cursor: pointer; padding: 14px 20px; border-radius: 16px; font-size: 0.95rem; font-weight: 600;
-    position: relative; overflow: hidden; transition: all .25s ease;
-    background: #0a53c9; color: #fff; box-shadow: 0 6px 20px rgba(10,83,201,0.35);
+    border: 0; cursor: pointer; padding: 12px 24px; border-radius: 12px; font-size: 0.95rem; font-weight: 600;
+    transition: all .25s ease;
+    background: #0a53c9; color: #fff;
 }
+.sm-btn:hover { background:#0844a8 !important; transform:translateY(-2px); }
 .sm-big { width: 100%; max-width: 260px; }
-.sm-btn:hover { background:#0844a8 !important; transform:scale(1.065); }
 
 /* Footer */
 .sm-card-footer { width: 100%; margin-top: 16px; text-align: center; }
@@ -131,140 +131,170 @@ html, body {
 .sm-footer-links a { color: #0a3d91; text-decoration: none; font-size: 0.9rem; }
 
 /* -------------------------
-   CHAT — FIXED SCROLLABLE LAYOUT
+   CHAT INTERFACE (Scroll Fixes)
    ------------------------- */
-
 .sm-chat-wrap {
     width: 100%;
-    max-width: 600px;
-    margin: 0 auto;
+    /* 1. Limit width to prevent stretching on large screens */
+    max-width: 480px; 
+    
+    /* 2. margin: auto centers the box vertically and horizontally */
+    margin: auto;     
     display: flex;
     flex-direction: column;
-    height: 96vh; /* Take up most of the viewport height */
-    gap: 10px;
+    
+    /* 3. Height is set to 60% of viewport to stay minimal and centered */
+    height: 60dvh; 
+    
+    /* 4. Padding ensures internal content doesn't touch the box edges */
+    padding: 15px; 
+    box-sizing: border-box;
+    gap: 12px;
 }
 
 .sm-chat-header {
-    flex-shrink: 0; /* Prevents header from shrinking */
-    width: 100%; 
-    display: flex; 
-    align-items: center; 
-    justify-content: space-between; 
-    gap: 12px;
-    padding: 15px 20px; 
-    background: linear-gradient(135deg, #0a3d91, #1e62d0); 
+    flex-shrink: 0; /* Pins header to the top */
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: linear-gradient(135deg, #0a3d91, #1e62d0);
     color: #fff;
-    border-radius: 12px; 
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.18);
+    border-radius: 14px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
     z-index: 10;
 }
 
-.sm-chat-card {
-    flex: 1; /* Card takes up all available vertical space */
-    background: #fff; 
-    border-radius: 16px; 
-    padding: 15px; 
-    box-shadow: 0 14px 36px rgba(0, 0, 0, 0.08);
-    display: flex; 
-    flex-direction: column; 
-    overflow: hidden; /* Contain the scrollable messages inside */
+.sm-room-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* Clear space between timer and quit btn */
+    flex-wrap: nowrap; /* Prevents stacking */
 }
 
-/* messages area - The only part that scrolls */
+.sm-timer {
+    font-family: monospace;
+    font-weight: bold;
+    background: rgba(255, 255, 255, 0.2);
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+}
+
+.sm-chat-card {
+    flex: 1; /* Card fills the available container space */
+    background: #fff;
+    border-radius: 20px;
+    padding: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; /* Keeps scroll internal */
+}
+
 .sm-messages { 
     flex: 1; 
-    padding: 10px; 
+    padding: 5px; 
     display: flex; 
     flex-direction: column; 
-    gap: 10px; 
-    overflow-y: auto; 
-    -webkit-overflow-scrolling: touch; /* Smooth scrolling for iOS */
+    gap: 12px; 
+    overflow-y: auto; /* Independent scroll for messages */
+    -webkit-overflow-scrolling: touch;
 }
 
-/* message bubbles */
+/* Message Bubbles */
 .sm-msg { 
-    max-width: 85%; 
-    padding: 10px 14px; 
-    border-radius: 14px; 
-    font-size: 0.95rem; 
-    line-height: 1.3; 
+    max-width: 80%; 
+    padding: 10px 16px; 
+    border-radius: 18px; 
+    font-size: 0.92rem; 
+    line-height: 1.4; 
     word-break: break-word; 
     animation: fadeIn 0.2s ease;
 }
 
 .sm-msg.left {
     align-self: flex-start;
-    background: #eef3ff;
+    background: #f0f4f8;
     color: #0a3d91;
-    border-bottom-left-radius: 6px;
+    border-bottom-left-radius: 4px;
 }
+
 .sm-msg.right {
     align-self: flex-end;
     background: #0a53c9;
     color: #fff;
-    border-bottom-right-radius: 6px;
+    border-bottom-right-radius: 4px;
 }
+
 .sm-msg.center {
     align-self: center;
     background: transparent;
-    color: #6c84c5;
-    font-size: 0.85rem;
+    color: #8fa3c0;
+    font-size: 0.8rem;
+    margin: 5px 0;
 }
 
-/* Input Row - Pinned to bottom of card */
+/* Chat Input Bar */
 .sm-input-row {
-    flex-shrink: 0; 
+    flex-shrink: 0; /* Pins input to the bottom */
     display: flex;
-    gap: 8px;
+    gap: 10px;
     align-items: center;
-    padding-top: 10px;
-    border-top: 1px solid #eef3ff;
+    padding: 12px 5px 5px 5px;
+    border-top: 1px solid #f0f4f8;
 }
 
 .sm-message-input {
     flex: 1; 
-    padding: 12px;
-    border-radius: 12px;
-    border: 1px solid #d7e1f5;
+    padding: 12px 16px;
+    border-radius: 24px;
+    border: 1px solid #e1e8f5;
+    background: #f8f9fc;
     font-size: 0.95rem;
     resize: none; 
     overflow-y: hidden;
-    max-height: 120px;
+    max-height: 100px;
 }
 
 .sm-send-btn { 
     background: #0a53c9; 
     color: #fff; 
     border: 0; 
-    padding: 12px 18px; 
-    border-radius: 12px;
-    font-weight: 600;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     cursor: pointer;
+    box-shadow: 0 4px 10px rgba(10, 83, 201, 0.3);
 }
 
 /* -------------------------
-   Responsive Tweaks
-   ------------------------- */
-@media (max-width: 600px) {
-    .sm-chat-wrap { 
-        height: 98vh; /* Use more height on small screens */
-        padding: 5px; 
-    }
-    .sm-app-title { font-size: 1.6rem; }
-    .sm-chat-header { padding: 12px; }
-}
-
-/* -------------------------
-   MODAL (Unchanged)
+   Modals & Popups
    ------------------------- */
 .sm-modal{ 
     position:fixed; inset:0; opacity: 0; visibility: hidden; 
     background:rgba(0,0,0,.0); place-items:center; z-index:999; 
     transition: all 0.3s ease;
+    display: none;
 }
 .sm-modal.sm-modal-open {
     visibility: visible; opacity: 1; background: rgba(0,0,0,.45); display: grid; 
 }
 .sm-modal-inner{
   width:92%; max-width:420px; background:#fff; padding:20px; border-radius:14px;
+}
+
+/* -------------------------
+   Responsive Tweaks
+   ------------------------- */
+@media (max-width: 600px) {
+    .sm-chat-wrap {
+        /* Height remains constrained on mobile unless you want it taller */
+        height: 60dvh; 
+        margin: auto;
+    }
 }
