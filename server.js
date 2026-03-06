@@ -83,6 +83,24 @@ io.on("connection", (socket) => {
     io.to(roomData.roomId).emit("systemMessage", `${socket.userName} joined.`);
   });
 
+  socket.on("destroyRoom", () => {
+    const roomId = socket.roomId;
+    if (roomId) {
+      const passcode = roomIds.get(roomId);
+      
+      // Remove from both Maps to wipe the history/access
+      if (passcode) rooms.delete(passcode);
+      roomIds.delete(roomId);
+
+      // Tell everyone in the room to leave and redirect
+      io.to(roomId).emit("systemMessage", "The other user has ended the session. History deleted.");
+      io.to(roomId).emit("roomDestroyed");
+      
+      // Force all sockets to leave the room
+      io.socketsLeave(roomId);
+    }
+  });
+
   socket.on("sendMessage", ({ message }) => {
     if (!socket.roomId) return; 
     socket.to(socket.roomId).emit("newMessage", { message, from: socket.userName });
@@ -106,4 +124,14 @@ io.on("connection", (socket) => {
 });
 
 server.listen(PORT, () => console.log(`🚀 Server on port ${PORT}`));
+const axios = require('axios'); // Ensure you run 'npm install axios' first
+const APP_URL = "https://blinkchat-i72t.onrender.com";
 
+setInterval(async () => {
+  try {
+    const response = await axios.get(APP_URL);
+    console.log(`Keep-Alive: Pinged ${APP_URL} - Status: ${response.status}`);
+  } catch (err) {
+    console.error("Keep-Alive: Ping failed:", err.message);
+  }
+}, 840000); // 14 minutes
