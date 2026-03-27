@@ -8,9 +8,57 @@
 
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
+  
+  <style>
+    /* Premium Corner Button Styling */
+    .premium-corner {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      z-index: 1000;
+    }
+
+    .sm-btn-premium {
+      background: linear-gradient(135deg, #ffc107, #ff9800);
+      color: #d4ff00;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 25px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      font-family: 'Poppins', sans-serif;
+      box-shadow: 0 4px 12px rgba(255, 193, 7, 0.4);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.3s ease;
+    }
+
+    .sm-btn-premium:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 15px rgba(255, 193, 7, 0.5);
+    }
+
+    .sm-btn-premium:active {
+      transform: scale(0.95);
+    }
+
+    /* Hide the button once the user is PRO */
+    .user-is-pro .premium-corner {
+      display: none;
+    }
+  </style>
 </head>
 
 <body class="sm-page-bg">
+
+  <div class="premium-corner">
+    <button id="removeAdsBtn" class="sm-btn-premium">
+      <span>✨</span> Remove Ads
+    </button>
+  </div>
+
   <main class="sm-center-wrap">
     <section class="sm-app-card" role="region" aria-labelledby="app-title">
       <header class="sm-card-header">
@@ -59,23 +107,38 @@
         </div>
       </div>
 
-      <footer class="sm-card-footer">
-  <div style="margin-bottom: 15px;">
-    <a href="mailto:sivamaha2109@gmail.com?subject=Report Unusual Activity&body=Please describe the issue or unusual activity you encountered:" 
-       class="sm-btn sm-btn-ghost" 
-       style="font-size: 0.8rem; border: 1px solid #ffffff; color: #ffffff !important; width: 100%; display: block; padding: 10px;">
-       Report Unusual Activity
-    </a>
+      <div id="pricingModal" class="sm-modal" role="dialog" aria-modal="true" aria-hidden="true">
+  <div class="sm-modal-inner" role="document" style="max-width: 400px; text-align: center;">
+    <h3 style="color: #0a3d91; margin-bottom: 15px;">✨ SMessage Pro</h3>
+    <div style="background: #eef3ff; padding: 20px; border-radius: 15px; margin-bottom: 20px;">
+      <div style="font-size: 3rem; margin-bottom: 10px;">🚀</div>
+      <h4 style="margin: 0; color: #0a3d91;">Coming Soon!</h4>
+      <p style="font-size: 0.9rem; color: #555; margin-top: 10px;">
+        We are working on bringing you a premium ad-free experience. Stay tuned!
+      </p>
+    </div>
+    <button id="closePricingBtn" class="sm-btn sm-btn-primary" style="width: 100%;">Great, I'll Wait!</button>
   </div>
+</div>
 
-  <div class="sm-footer-links">
-    <a href="privacy.html">Privacy Policy</a>
-    <a href="terms.html">Terms of Service</a>
-  </div>
-  <div class="sm-footer-note">
-    <small>🔒 Passcodes link you to encrypted sessions. No data is stored on our servers.</small>
-  </div>
-</footer>
+      <footer class="sm-card-footer">
+        <div style="margin-bottom: 15px;">
+          <a href="mailto:smessage2109@gmail.com?subject=Report Unusual Activity&body=Please describe the issue:" 
+             class="sm-btn sm-btn-ghost" 
+             style="font-size: 0.8rem; border: 1px solid #ffffff; color: #ffffff !important; width: 100%; display: block; padding: 10px;">
+             Report Unusual Activity
+          </a>
+        </div>
+
+        <div class="sm-footer-links">
+          <a href="privacy.html">Privacy Policy</a>
+          <a href="terms.html">Terms of Service</a>
+          <a href="#" id="restorePurchaseBtn" style="font-size: 0.7rem; opacity: 0.7;">Restore Purchase</a>
+        </div>
+        <div class="sm-footer-note">
+          <small>🔒 Passcodes link you to encrypted sessions. No data is stored on our servers after room expire</small>
+        </div>
+      </footer>
     </section>
   </main>
 
@@ -84,15 +147,61 @@
 
 <script>
 window.addEventListener("load", () => {
-
   const socket = io("https://blinkchat-i72t.onrender.com", {
     transports: ["websocket", "polling"]
   });
+// --- FETCH ADVERTISING ID FOR PRO STATUS ---
+async function getAndroidAdId() {
+  try {
+    // In Capacitor, plugins are accessed via Capacitor.Plugins
+    const { AdvertisingId } = Capacitor.Plugins;
+    
+    if (AdvertisingId) {
+      const response = await AdvertisingId.getAdvertisingId();
+      console.log("SMessage: Fetched Ad ID:", response.id);
+      
+      // Store it so you can use it when they click 'Remove Ads'
+      window.userAdId = response.id;
+      
+      // Check if this ID is already in your "Paid" list
+      // checkProStatus(response.id); 
+    }
+  } catch (error) {
+    console.warn("Could not get Ad ID. Standard mode active.", error);
+  }
+}
 
+// Call the function immediately
+getAndroidAdId();
+
+  // --- IAP LOGIC (REMOVE ADS) ---
+  // --- NEW IAP PRICING LOGIC ---
+// --- UPDATED IAP LOGIC (COMING SOON) ---
+const removeAdsBtn = document.getElementById('removeAdsBtn');
+const pricingModal = document.getElementById('pricingModal');
+const closePricingBtn = document.getElementById('closePricingBtn');
+
+// Open the "Coming Soon" modal
+removeAdsBtn.addEventListener('click', () => {
+  pricingModal.classList.add('sm-modal-open');
+});
+
+// Close the modal
+closePricingBtn.addEventListener('click', () => {
+  pricingModal.classList.remove('sm-modal-open');
+});
+
+// Restore button logic (Google required even if feature is coming soon)
+const restoreBtn = document.getElementById('restorePurchaseBtn');
+restoreBtn.addEventListener('click', (e) => {
+  e.preventDefault();
+  alert("No previous purchases found. Ad-free features are coming soon!");
+});
+
+  // --- ROOM LOGIC ---
   const linkDisplay = document.getElementById('linkDisplay');
   const createBtn = document.getElementById('createRoomBtn');
 
-  // 1. Create room logic
   createBtn.addEventListener('click', () => {
     if (createBtn.disabled) return;
     createBtn.disabled = true;
@@ -104,10 +213,8 @@ window.addEventListener("load", () => {
     createBtn.disabled = false;
     createBtn.textContent = 'Create Room';
 
-    // FIX: Generate key BASED on the passcode so User 2 can recreate it locally
     const secretKey = CryptoJS.SHA256(passcode).toString();
     
-    // Save for persistence (Syncing User 1)
     localStorage.setItem('last_room_id', roomId); 
     localStorage.setItem('last_passcode', passcode);
     localStorage.setItem('last_secret_key', secretKey);
@@ -130,19 +237,15 @@ window.addEventListener("load", () => {
     const countdownEl = document.getElementById('countdown');
     const t = setInterval(() => {
       countdown--;
-      if (countdownEl) {
-        countdownEl.textContent = ` • Redirecting to chat in ${countdown}s`;
-      }
-
+      if (countdownEl) countdownEl.textContent = ` • Redirecting to chat in ${countdown}s`;
       if (countdown <= 0) {
         clearInterval(t);
-        // Redirect with all 3 critical keys: Hex ID, Passcode, and Derived AES Key
         window.location.href = `join.html?room=${roomId}&p=${passcode}&key=${secretKey}&expireAt=${expireAt}`;
       }
     }, 1000);
   });
 
-  // 2. Join room logic
+  // --- JOIN MODAL LOGIC ---
   const joinBtnOpen = document.getElementById('openJoinWindowBtn');
   const joinRoomPopup = document.getElementById('joinRoomPopup');
   const joinSubmit = document.getElementById('joinRoomSubmit');
@@ -167,7 +270,6 @@ window.addEventListener("load", () => {
   });
 
   socket.on('joinSuccess', ({ roomId, passcode, expireAt }) => {
-      // For the Joiner, the key is derived from the passcode in join.html
       window.location.href = `join.html?room=${roomId}&p=${passcode}&expireAt=${expireAt}`;
   });
 
@@ -179,7 +281,7 @@ window.addEventListener("load", () => {
       }
   });
 
-  // T&C logic
+  // --- T&C LOGIC ---
   const termsModal = document.getElementById('termsModal');
   const acceptTermsCheckbox = document.getElementById('acceptTermsCheckbox');
   const agreeAndContinueBtn = document.getElementById('agreeAndContinueBtn');
@@ -201,4 +303,3 @@ window.addEventListener("load", () => {
 </script>
 </body>
 </html>
-
