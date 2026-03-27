@@ -134,20 +134,16 @@ html, body {
    CHAT INTERFACE (Scroll Fixes)
    ------------------------- */
 .sm-chat-wrap {
-    width: 100%;
-    /* 1. Limit width to prevent stretching on large screens */
-    max-width: 480px; 
-    
-    /* 2. margin: auto centers the box vertically and horizontally */
+    width: min(94%, 480px); 
     margin: auto;     
     display: flex;
     flex-direction: column;
     
-    /* 3. Height is set to 60% of viewport to stay minimal and centered */
-    height: 60dvh; 
+    /* FIX: Changed 'height' to 'max-height' */
+    /* This allows the box to shrink when the keyboard pushes up */
+    max-height: 90dvh; 
     
-    /* 4. Padding ensures internal content doesn't touch the box edges */
-    padding: 15px; 
+    padding: 10px; 
     box-sizing: border-box;
     gap: 12px;
 }
@@ -271,7 +267,19 @@ html, body {
     cursor: pointer;
     box-shadow: 0 4px 10px rgba(10, 83, 201, 0.3);
 }
-
+/* --- Typing Indicator Styling --- */
+/* --- Optimized Typing Indicator --- */
+#typingIndicator {
+    font-size: 0.75rem;
+    color: #0a3d91;
+    font-style: italic;
+    margin-bottom: 4px;
+    padding-left: 10px;
+    height: 1.2rem; /* Reserves space to prevent message "jumping" */
+    opacity: 0.8;
+    animation: typingPulse 1.5s infinite ease-in-out;
+    /* transition: all 0.3s ease; */
+}
 /* -------------------------
    Modals & Popups
    ------------------------- */
@@ -293,8 +301,13 @@ html, body {
    ------------------------- */
 @media (max-width: 600px) {
     .sm-chat-wrap {
-        /* Height remains constrained on mobile unless you want it taller */
-        height: 60dvh; 
-        margin: auto;
+        height: auto; /* Let content define height */
+        max-height: 95dvh;
+        margin-bottom: 5px; /* Adds a tiny gap above the keyboard */
     }
+}
+@keyframes typingPulse {
+    0% { opacity: 0.5; }
+    50% { opacity: 1; }
+    100% { opacity: 0.5; }
 }
