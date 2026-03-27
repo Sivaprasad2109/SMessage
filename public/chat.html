@@ -35,45 +35,62 @@
     const socket = io("https://blinkchat-i72t.onrender.com", { transports: ["websocket", "polling"], reconnection: true });
     const params = new URLSearchParams(window.location.search);
     
+    
     let roomId = params.get("room") || localStorage.getItem("last_room_id");
     let passcode = params.get("p") || localStorage.getItem("last_passcode");
     let secretKey = params.get("key") || localStorage.getItem("last_secret_key");
-    let expireAt = Number(params.get("expireAt")) || Number(localStorage.getItem("last_expire_at"));
+    // This forces the value to be a number even if it's coming from a URL string
+    let expireAt = Number(params.get("expireAt")) || Number(localStorage.getItem("last_expire_at")) || 0;
+    let myName = params.get("name") || localStorage.getItem("blinkchat_name") || "Guest";
 
     if (!roomId || roomId === "null") { window.location.href = "index.html"; return; }
 
     const messagesDiv = document.getElementById("messages");
     const input = document.getElementById("messageInput");
     const sendBtn = document.getElementById("sendBtn");
-    const myName = localStorage.getItem("blinkchat_name") || "Anonymous";
     document.getElementById("roomIdBox").textContent = `Code: ${passcode}`;
-
-    // AUTO-REJOIN ON CONNECT
-    socket.on("connect", () => {
-        socket.emit("joinRoom", { roomId, passcode, name: myName });
-    });
-
     const timerInterval = setInterval(() => {
-        const diff = expireAt - Date.now();
+        const now = Date.now();
+        const diff = expireAt - now;
+
         if (diff <= 0) {
             clearInterval(timerInterval);
+            document.getElementById("timerBox").textContent = "00:00";
+            
+            // Clean up local storage
+            localStorage.removeItem("last_room_id");
+            localStorage.removeItem("last_passcode");
+            localStorage.removeItem("last_secret_key");
+            
+            alert("Session Expired");
             window.location.href = "index.html";
         } else {
-            const m = Math.floor(diff / 60000), s = Math.floor((diff % 60000) / 1000);
+            const m = Math.floor(diff / 60000);
+            const s = Math.floor((diff % 60000) / 1000);
+            // Display as 00:00 format
             document.getElementById("timerBox").textContent = `${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
         }
     }, 1000);
 
-    function sendMessage() {
+    // AUTO-REJOIN ON CONNECT
+    socket.on("connect", () => {
+    // Pass the name to the server so it knows who joined
+    socket.emit("joinRoom", { roomId, passcode, name: myName });
+});
+
+function sendMessage() {
     const msg = input.value.trim();
     if (!msg || !secretKey || !socket.connected) return;
 
     const encrypted = CryptoJS.AES.encrypt(msg, secretKey).toString();
     socket.emit("sendMessage", { message: encrypted });
+    
+    // Use myName here
     addMessage(myName + " (You)", msg, "right");
 
     input.value = "";
-    input.style.height = "auto";   // ✅ reset textarea height
+    input.style.height = "auto";
+    socket.emit("stopTyping"); // Stop typing indicator after sending
 }
 
 
@@ -104,6 +121,8 @@
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
     }
 
+    // Send typing signals to server
+
     // Replace your existing quitBtn listener in chat.html
     document.getElementById("quitBtn").addEventListener("click", () => {
     if (confirm("Quit and delete chat history for everyone?")) {
@@ -117,7 +136,7 @@
     document.getElementById("reportBtn").addEventListener("click", () => {
     // roomId and passcode are already accessible from your existing variables
     if (confirm("Report this room for unusual activity or policy violations?")) {
-        const adminEmail = "sivamaha2109@gmail.com";
+        const adminEmail = "smessage2109@gmail.com";
         const subject = encodeURIComponent(`SMessage Report: Room ${passcode}`);
         const body = encodeURIComponent(
             `REPORT DETAILS\n` +
@@ -138,26 +157,63 @@
    Auto-grow textarea + Enter send
    =============================== */
 
-input.addEventListener("input", () => {
-    input.style.height = "auto";
-    input.style.height = input.scrollHeight + "px";
+/* ===============================
+   Typing Status + Auto-grow
+   =============================== */
+/* =========================================
+   Typing Status + Auto-grow UI (Merged)
+   ========================================= */
+    /* =========================================
+       Typing Status + Auto-grow UI (Merged)
+       ========================================= */
+    let typingTimer; // <--- FIX 1: Define the timer variable here
 
-    if (input.scrollHeight > 110) {
-        input.style.height = "110px";
-        input.style.overflowY = "auto";
-    } else {
-        input.style.overflowY = "hidden";
-    }
-});
+    input.addEventListener("input", () => {
+        // 1. Send Typing Signal to server.js
+        if (input.value.trim().length > 0) {
+            socket.emit("typing"); 
+        } else {
+            socket.emit("stopTyping"); 
+        }
 
-input.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-        e.preventDefault();  // stop new line
-        sendMessage();       // send message
-    }
-});
+        clearTimeout(typingTimer);
+        typingTimer = setTimeout(() => {
+            socket.emit("stopTyping");
+        }, 2000);
 
-})();
+        // 2. Handle Auto-grow UI logic
+        input.style.height = "auto";
+        input.style.height = input.scrollHeight + "px";
+
+        if (input.scrollHeight > 110) {
+            input.style.height = "110px";
+            input.style.overflowY = "auto";
+        } else {
+            input.style.overflowY = "hidden";
+        }
+    });
+
+    // --- FIX 2: Add these listeners so YOU can see when THEY type ---
+    const typingIndicator = document.getElementById("typingIndicator");
+
+    socket.on("showTyping", ({ from }) => {
+        typingIndicator.style.display = "block";
+        typingIndicator.textContent = `${from} is typing...`;
+    });
+
+    socket.on("hideTyping", () => {
+        typingIndicator.style.display = "none";
+    });
+
+    // --- Enter to Send Logic ---
+    input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage();
+        }
+    });
+
+})(); // Close the IIFE
 </script>
 </body>
 </html>
