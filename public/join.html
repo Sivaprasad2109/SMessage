@@ -31,15 +31,16 @@
     nameInput.value = localStorage.getItem("blinkchat_name") || "";
 
     document.getElementById("joinBtn").addEventListener("click", () => {
-        const name = nameInput.value.trim() || "Anonymous";
-        localStorage.setItem("blinkchat_name", name);
-        localStorage.setItem("last_room_id", roomId);
-        localStorage.setItem("last_passcode", passcode);
-        localStorage.setItem("last_secret_key", secretKey);
-        localStorage.setItem("last_expire_at", expireAt);
+    const name = nameInput.value.trim() || "Guest"; // Fallback to Guest
+    localStorage.setItem("blinkchat_name", name);
+    localStorage.setItem("last_room_id", roomId);
+    localStorage.setItem("last_passcode", passcode);
+    localStorage.setItem("last_secret_key", secretKey);
+    localStorage.setItem("last_expire_at", expireAt);
 
-        window.location.href = `chat.html?room=${roomId}&p=${passcode}&key=${secretKey}&expireAt=${expireAt}`;
-    });
+    // Pass the name as a URL parameter
+    window.location.href = `chat.html?room=${roomId}&p=${passcode}&key=${secretKey}&expireAt=${expireAt}&name=${encodeURIComponent(name)}`;
+});
 })();
 </script>
 </body>
