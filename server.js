@@ -5,6 +5,7 @@ const path = require("path");
 const crypto = require("crypto");
 const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
+const axios = require('axios');
 
 const app = express();
 const server = http.createServer(app);
@@ -33,6 +34,7 @@ function generateUniquePasscode() {
 }
 
 io.on("connection", (socket) => {
+  
   socket.on("createRoom", () => {
     const passcode = generateUniquePasscode();
     const roomId = crypto.randomBytes(16).toString("hex");
@@ -44,6 +46,7 @@ io.on("connection", (socket) => {
 
     socket.join(roomId);
     socket.roomId = roomId;
+    socket.userName = "Creator"; // Default name for the creator
     socket.emit("roomCreated", { passcode, roomId, expireAt });
 
     setTimeout(() => {
@@ -69,9 +72,18 @@ io.on("connection", (socket) => {
       return;
     }
 
+    // FIX 1: Allow One-to-One only (Max 2 users)
+    const currentRoom = io.sockets.adapter.rooms.get(roomData.roomId);
+    if (currentRoom && currentRoom.size >= 2) {
+      socket.emit("systemMessage", "This room is full. Only 2 people allowed.");
+      return;
+    }
+
     socket.join(roomData.roomId);
     socket.roomId = roomData.roomId;
-    socket.userName = name || "Anonymous";
+    
+    // FIX 2: Ensure name is captured correctly (fallback to 'Guest')
+    socket.userName = name && name.trim() !== "" ? name : "Guest";
 
     socket.emit("joinSuccess", { 
         roomId: roomData.roomId, 
@@ -79,59 +91,62 @@ io.on("connection", (socket) => {
         expireAt: roomData.expireAt 
     });
 
-    // FIX: Notify everyone in the room that a user joined
+    // FIX 3: Notify everyone in the room that a specific user joined
     io.to(roomData.roomId).emit("systemMessage", `${socket.userName} joined.`);
-  });
-
-  socket.on("destroyRoom", () => {
-    const roomId = socket.roomId;
-    if (roomId) {
-      const passcode = roomIds.get(roomId);
-      
-      // Remove from both Maps to wipe the history/access
-      if (passcode) rooms.delete(passcode);
-      roomIds.delete(roomId);
-
-      // Tell everyone in the room to leave and redirect
-      io.to(roomId).emit("systemMessage", "The other user has ended the session. History deleted.");
-      io.to(roomId).emit("roomDestroyed");
-      
-      // Force all sockets to leave the room
-      io.socketsLeave(roomId);
-    }
   });
 
   socket.on("sendMessage", ({ message }) => {
     if (!socket.roomId) return; 
+    // Sending to others, including the sender's name
     socket.to(socket.roomId).emit("newMessage", { message, from: socket.userName });
   });
 
-  socket.on("typing", () => { if (socket.roomId) socket.to(socket.roomId).emit("showTyping"); });
-  socket.on("stopTyping", () => { if (socket.roomId) socket.to(socket.roomId).emit("hideTyping"); });
+  // TYPING INDICATIONS
+  socket.on("typing", () => { 
+    if (socket.roomId) socket.to(socket.roomId).emit("showTyping", { from: socket.userName }); 
+  });
+  socket.on("stopTyping", () => { 
+    if (socket.roomId) socket.to(socket.roomId).emit("hideTyping"); 
+  });
 
   socket.on("disconnect", () => {
     const rId = socket.roomId;
-    const uName = socket.userName || "User";
+    const uName = socket.userName || "User"; // Uses the captured name
     if (rId) {
+      // Delay check to see if they actually left or just refreshed
       setTimeout(() => {
         const room = io.sockets.adapter.rooms.get(rId);
-        if (!room || room.size < 2) {
+        // Notify only if someone is still in the room to hear it
+        if (room) {
           io.to(rId).emit("systemMessage", `${uName} went offline.`);
         }
-      }, 8000); 
+      }, 2000); 
+    }
+  });
+
+  // DESTROY ROOM LOGIC
+  socket.on("destroyRoom", () => {
+    const roomId = socket.roomId;
+    if (roomId) {
+      const passcode = roomIds.get(roomId);
+      if (passcode) rooms.delete(passcode);
+      roomIds.delete(roomId);
+      io.to(roomId).emit("systemMessage", "History deleted by user.");
+      io.to(roomId).emit("roomDestroyed");
+      io.socketsLeave(roomId);
     }
   });
 });
 
 server.listen(PORT, () => console.log(`🚀 Server on port ${PORT}`));
-const axios = require('axios'); // Ensure you run 'npm install axios' first
-const APP_URL = "https://blinkchat-i72t.onrender.com";
 
+// KEEP ALIVE
+const APP_URL = "https://blinkchat-i72t.onrender.com";
 setInterval(async () => {
   try {
     const response = await axios.get(APP_URL);
-    console.log(`Keep-Alive: Pinged ${APP_URL} - Status: ${response.status}`);
+    console.log(`Keep-Alive: Status ${response.status}`);
   } catch (err) {
-    console.error("Keep-Alive: Ping failed:", err.message);
+    console.error("Keep-Alive Failed");
   }
-}, 840000); // 14 minutes
+}, 840000);
