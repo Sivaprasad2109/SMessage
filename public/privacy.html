@@ -3,149 +3,67 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Privacy Policy - SMessage</title>
-
+  <title>Privacy Policy – SMessage</title>
   <style>
-    body {
-      font-family: "Poppins", sans-serif;
-      margin: 0;
-      padding: 0;
-      background: #f2f6ff;
-      color: #222;
-      line-height: 1.6;
-    }
-    .container {
-      max-width: 900px;
-      margin: 30px auto;
-      background: #fff;
-      padding: 35px;
-      border-radius: 12px;
-      box-shadow: 0 0 20px rgba(0,0,0,0.08);
-    }
-    h1 {
-      text-align: center;
-      color: #0a3d91;
-      margin-bottom: 20px;
-    }
-    h2 {
-      color: #0a3d91;
-      margin-top: 25px;
-    }
-    a {
-      color: #0a3d91;
-      text-decoration: none;
-      font-weight: 600;
-    }
-    a:hover {
-      text-decoration: underline;
-    }
-    footer {
-      text-align: center;
-      margin-top: 40px;
-      font-size: 0.9rem;
-      color: #888;
-    }
+    body { font-family: "Poppins", sans-serif; margin: 0; padding: 0; background: #f2f6ff; color: #222; line-height: 1.6; }
+    .container { max-width: 900px; margin: 30px auto; background: #fff; padding: 35px; border-radius: 12px; box-shadow: 0 0 20px rgba(0,0,0,0.08); }
+    h1 { text-align: center; color: #0a3d91; margin-bottom: 20px; }
+    h2 { color: #0a3d91; margin-top: 25px; border-left: 4px solid #0a3d91; padding-left: 10px; }
+    ul { padding-left: 20px; }
+    li { margin-bottom: 8px; }
+    a { color: #0a3d91; text-decoration: none; font-weight: 600; }
+    footer { text-align: center; margin-top: 40px; font-size: 0.9rem; color: #888; border-top: 1px solid #eee; padding-top: 20px; }
+    .back-link-box { margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid #e0e0e0; }
+    .back-link { display: inline-block; padding: 8px 12px; border-radius: 8px; background: #eef3ff; text-decoration: none; font-weight: 600; color: #0a3d91 !important; }
+    .important-note { background: #fff9e6; border: 1px solid #ffeeba; padding: 15px; border-radius: 8px; margin: 20px 0; }
   </style>
 </head>
-
 <body>
   <div class="container">
+    <div class="back-link-box">
+        <a href="index.html" class="back-link">← Back to Home Page</a>
+    </div>
     <h1>SMessage — Privacy Policy</h1>
+    <p><strong>Last Updated:</strong> March 29, 2026</p>
 
-    <p><strong>Last Updated:</strong> 17-11-2025</p>
+    <div class="important-note">
+        <strong>Privacy Commitment:</strong> SMessage is built on the principle of zero data retention. We do not want your data, we do not ask for it, and our systems delete temporary session information automatically.
+    </div>
 
-    <p>
-      Welcome to <strong>SMessage</strong>. We are committed to protecting your privacy and ensuring 
-      transparency in how our service operates. This Privacy Policy explains how SMessage handles 
-      information within the app and website.
-    </p>
-
-    <h2>1. Information We Do Not Collect</h2>
-    <p>
-      SMessage is designed for privacy. We do <strong>not</strong> collect or store:
-    </p>
+    <h2>1. Data Collection & Technical Identifiers</h2>
+    <p>SMessage is strictly a "no-logs" service. However, to facilitate advertising and security, the following data may be processed:</p>
     <ul>
-      <li>Personal details (name, email, phone, address)</li>
-      <li>Account information or passwords</li>
-      <li>Contact lists or device identifiers</li>
-      <li>Chat messages or media</li>
-      <li>Room keys, encryption keys, or metadata</li>
-      <li>User location or browsing history</li>
+        <li><strong>Advertising ID:</strong> We collect the Google Advertising ID (AAID) to serve and personalize ads.</li>
+        <li><strong>Device Identifiers:</strong> We process non-permanent identifiers for fraud prevention and analytics.</li>
+        <li><strong>Security Logs:</strong> Temporary technical identifiers like <strong>IP addresses</strong> are used solely for rate-limiting and enforcing security policies.</li>
     </ul>
 
     <h2>2. End-to-End Encryption</h2>
-    <p>
-      All messages are encrypted directly on your device before they are sent, and only the intended 
-      recipient can decrypt them. We cannot read, monitor, or access your chat content.
-    </p>
-
-    <h2>3. Temporary Room Data</h2>
-    <p>
-      To enable chatting, we temporarily process:
-    </p>
+    <p>All messages are end-to-end encrypted (E2EE) directly on your device using keys derived from your 6-digit passcode.</p>
     <ul>
-      <li>Randomly generated room IDs</li>
-      <li>Temporary socket session IDs</li>
-      <li>Room expiration timestamps</li>
+        <li><strong>Inability to Access:</strong> The developer cannot read, monitor, or intercept your chat content.</li>
+        <li><strong>Moderation:</strong> As content is encrypted, SMessage cannot verify reports or moderate private conversations.</li>
     </ul>
-    <p>
-      This data is automatically deleted when the room expires or all users leave. No long-term 
-      storage or logging is performed.
-    </p>
+
+    <h2>3. Temporary Session Data & Automatic Deletion</h2>
+    <p>To facilitate communication, our server processes minimal temporary data (Passcode Mapping and Socket Sessions). <strong>Data Deletion:</strong> All room data is wiped from the server's memory automatically after 40 minutes of inactivity or upon room closure.</p>
 
     <h2>4. Local Storage Usage</h2>
-    <p>
-      We only use local storage for:
-    </p>
-    <ul>
-      <li>Your display name</li>
-      <li>Basic UI preferences</li>
-    </ul>
-    <p>
-      This information never leaves your device.
-    </p>
+    <p>We store small amounts of data locally on your device (Display Name, current room passcode, and terms acceptance). This data remains on your device and is never uploaded to our servers.</p>
 
-    <h2>5. Third-Party Services & Ads</h2>
-    <p>
-      SMessage does not currently use ads or third-party SDKs.  
-      If advertising (such as Google AdMob) is added in the future, this policy will be updated and 
-      users will be notified.
-    </p>
+    <h2>5. Third-Party Services (AdMob)</h2>
+    <p>We use <strong>Google AdMob</strong> to show advertisements. Google may use your device identifiers to serve and personalize ads. You can reset your Advertising ID or opt-out of personalized ads in your **Android Device Settings > Google > Ads**.</p>
 
-    <h2>6. Acceptable Use</h2>
-    <p>
-      Users must not use SMessage for:
-    </p>
-    <ul>
-      <li>Illegal or harmful activities</li>
-      <li>Harassment or abusive content</li>
-      <li>Sharing malicious files or harmful links</li>
-      <li>Attempts to break or bypass encryption/security</li>
-    </ul>
+    <h2>6. Security & Liability</h2>
+    <p>While we use industry-standard AES encryption, no system is 100% secure. The developer is not liable for unauthorized access resulting from the use of this service.</p>
 
     <h2>7. Children’s Privacy</h2>
-    <p>
-      SMessage is not intended for children under 13. We do not knowingly collect any information 
-      from minors.
-    </p>
+    <p>You must be at least 13 years of age to use SMessage.</p>
 
-    <h2>8. Contact & Reporting Misuse</h2>
-    <p>
-      If you need support or want to report misuse:
-    </p>
+    <h2>8. Contact & Support</h2>
+    <p>For technical support, please contact: <br><strong>Email:</strong> smessage2109@gmail.com</p>
 
-    <p><strong>Email:</strong> your-email@example.com  
-    <br>(Replace with your real support email)</p>
-
-    <h2>9. Changes to This Policy</h2>
-    <p>
-      We may update this Privacy Policy from time to time. The updated date will be shown at the top 
-      of this page.
-    </p>
-
-    <footer>
-      © SMessage — Privacy Protection & Secure Communication
-    </footer>
+    <footer>© SMessage — Privacy Protection & Secure Communication</footer>
   </div>
 </body>
 </html>
