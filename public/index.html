@@ -146,6 +146,7 @@
   <script src="https://blinkchat-i72t.onrender.com/socket.io/socket.io.js"></script>
 
 <script>
+if (window.Android) window.Android.setBannerVisible(true);
 window.addEventListener("load", () => {
   const socket = io("https://blinkchat-i72t.onrender.com", {
     transports: ["websocket", "polling"]
@@ -203,6 +204,9 @@ restoreBtn.addEventListener('click', (e) => {
   const createBtn = document.getElementById('createRoomBtn');
 
   createBtn.addEventListener('click', () => {
+    if (window.Android) {
+        window.Android.showAd(); 
+    }
     if (createBtn.disabled) return;
     createBtn.disabled = true;
     createBtn.textContent = 'Generating Code...';
@@ -233,7 +237,7 @@ restoreBtn.addEventListener('click', (e) => {
       </div>
     `;
 
-    let countdown = 15;
+    let countdown = 25;
     const countdownEl = document.getElementById('countdown');
     const t = setInterval(() => {
       countdown--;
