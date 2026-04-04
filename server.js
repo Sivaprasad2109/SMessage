@@ -81,6 +81,8 @@ io.on("connection", (socket) => {
 
     socket.join(roomData.roomId);
     socket.roomId = roomData.roomId;
+    const currentSize = io.sockets.adapter.rooms.get(roomData.roomId)?.size || 0;
+    io.to(roomData.roomId).emit("updateUserCount", currentSize);
     
     // FIX 2: Ensure name is captured correctly (fallback to 'Guest')
     socket.userName = name && name.trim() !== "" ? name : "Guest";
@@ -95,11 +97,26 @@ io.on("connection", (socket) => {
     io.to(roomData.roomId).emit("systemMessage", `${socket.userName} joined.`);
   });
 
-  socket.on("sendMessage", ({ message }) => {
+  socket.on("sendMessage", ({ message, msgId, replyTo }) => {
     if (!socket.roomId) return; 
-    // Sending to others, including the sender's name
-    socket.to(socket.roomId).emit("newMessage", { message, from: socket.userName });
-  });
+
+    // NEW: We now include 'msgId' and 'replyTo' in the emission
+    socket.to(socket.roomId).emit("newMessage", { 
+        message, 
+        from: socket.userName || "Guest",
+        msgId: msgId,   // This allows the receiver to "mark as seen"
+        replyTo: replyTo // This shows the "Replying to..." text
+    });
+});
+
+// ADD THIS NEW LISTENER BELOW IT:
+socket.on("messageSeen", ({ roomId, msgId }) => {
+    // This tells the sender that their specific message was viewed
+    socket.to(roomId).emit("msgStatusUpdate", { 
+        msgId: msgId, 
+        status: "seen" 
+    });
+});
 
   // TYPING INDICATIONS
   socket.on("typing", () => { 
@@ -111,18 +128,24 @@ io.on("connection", (socket) => {
 
   socket.on("disconnect", () => {
     const rId = socket.roomId;
-    const uName = socket.userName || "User"; // Uses the captured name
+    const uName = socket.userName || "User"; 
+
     if (rId) {
-      // Delay check to see if they actually left or just refreshed
-      setTimeout(() => {
-        const room = io.sockets.adapter.rooms.get(rId);
-        // Notify only if someone is still in the room to hear it
-        if (room) {
-          io.to(rId).emit("systemMessage", `${uName} went offline.`);
-        }
-      }, 2000); 
+        // Delay check to see if they actually left or just refreshed
+        setTimeout(() => {
+            const room = io.sockets.adapter.rooms.get(rId);
+            
+            // 1. Notify only if someone is still in the room to hear it
+            if (room) {
+                io.to(rId).emit("systemMessage", `${uName} went offline.`);
+                
+                // 2. SEND UPDATED COUNT TO REMAINING USER
+                const currentSize = room.size;
+                io.to(rId).emit("updateUserCount", currentSize);
+            }
+        }, 2000); 
     }
-  });
+});
 
   // DESTROY ROOM LOGIC
   socket.on("destroyRoom", () => {
