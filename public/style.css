@@ -311,3 +311,31 @@ html, body {
     50% { opacity: 1; }
     100% { opacity: 0.5; }
 }
+/* Style for the preview inside the chat bubble */
+.sm-reply-preview {
+    background: rgba(0, 0, 0, 0.08);
+    border-left: 3px solid #0a53c9;
+    padding: 5px 8px;
+    margin-bottom: 5px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    color: #555;
+    font-style: italic;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Visual cue for the 'Seen' checkmarks */
+.sm-status {
+    color: #0a53c9;
+    font-weight: bold;
+    display: inline-block;
+    transition: all 0.3s ease;
+}
+
+/* Optional: Animation for the swipe-to-reply gesture */
+.sm-msg {
+    transition: transform 0.1s ease-out;
+    position: relative;
+}
