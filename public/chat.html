@@ -31,15 +31,14 @@
     </section>
   </main>
 <script>
+if (window.Android) window.Android.setBannerVisible(false);
 (() => {
     const socket = io("https://blinkchat-i72t.onrender.com", { transports: ["websocket", "polling"], reconnection: true });
     const params = new URLSearchParams(window.location.search);
     
-    
     let roomId = params.get("room") || localStorage.getItem("last_room_id");
     let passcode = params.get("p") || localStorage.getItem("last_passcode");
     let secretKey = params.get("key") || localStorage.getItem("last_secret_key");
-    // This forces the value to be a number even if it's coming from a URL string
     let expireAt = Number(params.get("expireAt")) || Number(localStorage.getItem("last_expire_at")) || 0;
     let myName = params.get("name") || localStorage.getItem("blinkchat_name") || "Guest";
 
@@ -48,170 +47,144 @@
     const messagesDiv = document.getElementById("messages");
     const input = document.getElementById("messageInput");
     const sendBtn = document.getElementById("sendBtn");
+    let replyToMsg = null; // Tracks which message is being replied to
+
     document.getElementById("roomIdBox").textContent = `Code: ${passcode}`;
-    const timerInterval = setInterval(() => {
-        const now = Date.now();
-        const diff = expireAt - now;
 
-        if (diff <= 0) {
-            clearInterval(timerInterval);
-            document.getElementById("timerBox").textContent = "00:00";
-            
-            // Clean up local storage
-            localStorage.removeItem("last_room_id");
-            localStorage.removeItem("last_passcode");
-            localStorage.removeItem("last_secret_key");
-            
-            alert("Session Expired");
-            window.location.href = "index.html";
+    // --- 1. ACTIVE USER COUNT UI UPDATE ---
+    socket.on("updateUserCount", (count) => {
+        const subHeader = document.querySelector(".sm-chat-sub");
+        if (count >= 2) {
+            subHeader.textContent = "Friend Joined";
+            subHeader.style.color = "#4CAF50"; 
         } else {
-            const m = Math.floor(diff / 60000);
-            const s = Math.floor((diff % 60000) / 1000);
-            // Display as 00:00 format
-            document.getElementById("timerBox").textContent = `${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
+            subHeader.textContent = "Waiting for friend...";
+            subHeader.style.color = "rgba(255,255,255,0.8)";
         }
-    }, 1000);
+    });
 
-    // AUTO-REJOIN ON CONNECT
-    socket.on("connect", () => {
-    // Pass the name to the server so it knows who joined
-    socket.emit("joinRoom", { roomId, passcode, name: myName });
-});
-
-function sendMessage() {
-    const msg = input.value.trim();
-    if (!msg || !secretKey || !socket.connected) return;
-
-    const encrypted = CryptoJS.AES.encrypt(msg, secretKey).toString();
-    socket.emit("sendMessage", { message: encrypted });
-    
-    // Use myName here
-    addMessage(myName + " (You)", msg, "right");
-
-    input.value = "";
-    input.style.height = "auto";
-    socket.emit("stopTyping"); // Stop typing indicator after sending
-}
-
-
-    sendBtn.addEventListener("click", sendMessage);
-    socket.on("newMessage", ({ message, from }) => {
+    // --- 2. MESSAGE SEEN LOGIC ---
+    socket.on("newMessage", ({ message, from, msgId }) => {
         try {
             const dec = CryptoJS.AES.decrypt(message, secretKey).toString(CryptoJS.enc.Utf8);
-            if (dec) addMessage(from, dec, "left");
+            if (dec) {
+                addMessage(from, dec, "left", msgId);
+                // Tell server we saw it
+                socket.emit("messageSeen", { roomId, msgId });
+            }
         } catch (e) { addMessage("System", "[Decryption Error]", "center"); }
     });
-    // Add this inside the script block in chat.html
-    socket.on("roomDestroyed", () => {
-    localStorage.removeItem("last_room_id");
-    localStorage.removeItem("last_passcode");
-    localStorage.removeItem("last_secret_key");
-    
-    alert("This session has been ended and deleted.");
-    window.location.href = "index.html";
+
+    socket.on("msgStatusUpdate", ({ msgId, status }) => {
+        const statusEl = document.querySelector(`[data-id="${msgId}"] .sm-status`);
+        if (statusEl) statusEl.textContent = "✔✔"; // Double tick for seen
     });
 
-    socket.on("systemMessage", msg => addMessage("System", msg, "center"));
+    function sendMessage() {
+        const msg = input.value.trim();
+        if (!msg || !secretKey || !socket.connected) return;
 
-    function addMessage(name, text, side) {
+        const msgId = "msg_" + Date.now();
+        const encrypted = CryptoJS.AES.encrypt(msg, secretKey).toString();
+        
+        socket.emit("sendMessage", { 
+            message: encrypted, 
+            msgId: msgId, 
+            replyTo: replyToMsg // Send reply data if exists
+        });
+        
+        addMessage(myName + " (You)", msg, "right", msgId, replyToMsg);
+        cancelReply(); // Clear reply box after sending
+        input.value = "";
+        input.style.height = "auto";
+        socket.emit("stopTyping");
+    }
+
+    // --- 3. DRAG TO REPLY LOGIC ---
+    function addMessage(name, text, side, msgId, replyData = null) {
         const div = document.createElement("div");
         div.className = `sm-msg ${side}`;
-        div.innerHTML = `<div style="font-size:0.7rem;">${name}</div><div>${text}</div>`;
+        div.setAttribute("data-id", msgId);
+        
+        let replyHtml = replyData ? `<div class="sm-reply-preview">Replying to: ${replyData}</div>` : "";
+        let statusHtml = side === "right" ? `<span class="sm-status" style="font-size:0.6rem; margin-left:5px;">✔</span>` : "";
+
+        div.innerHTML = `
+            ${replyHtml}
+            <div style="font-size:0.7rem;">${name}</div>
+            <div>${text} ${statusHtml}</div>
+        `;
+
+        // Touch handling for drag-to-reply
+        let startX = 0;
+        div.addEventListener('touchstart', (e) => { startX = e.touches[0].clientX; }, {passive: true});
+        div.addEventListener('touchmove', (e) => {
+            let diff = e.touches[0].clientX - startX;
+            if (diff > 50 && side === 'left') div.style.transform = `translateX(${Math.min(diff, 100)}px)`;
+        }, {passive: true});
+        div.addEventListener('touchend', (e) => {
+            if (e.changedTouches[0].clientX - startX > 80 && side === 'left') {
+                initiateReply(text);
+            }
+            div.style.transform = "translateX(0px)";
+        });
+
         messagesDiv.appendChild(div);
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
     }
 
-    // Send typing signals to server
+    function initiateReply(text) {
+        replyToMsg = text;
+        input.placeholder = `Replying to: ${text.substring(0, 20)}...`;
+        input.focus();
+    }
 
-    // Replace your existing quitBtn listener in chat.html
+    function cancelReply() {
+        replyToMsg = null;
+        input.placeholder = "Type...";
+    }
+
+    // --- EXISTING LOGIC (TIMER, QUIT, REPORT) ---
+    const timerInterval = setInterval(() => {
+        const now = Date.now();
+        const diff = expireAt - now;
+        if (diff <= 0) {
+            clearInterval(timerInterval);
+            if (window.Android) window.Android.showAd();
+            window.location.href = "index.html";
+        } else {
+            const m = Math.floor(diff / 60000);
+            const s = Math.floor((diff % 60000) / 1000);
+            document.getElementById("timerBox").textContent = `${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
+        }
+    }, 1000);
+
+    socket.on("connect", () => { socket.emit("joinRoom", { roomId, passcode, name: myName }); });
+    sendBtn.addEventListener("click", sendMessage);
+    
     document.getElementById("quitBtn").addEventListener("click", () => {
-    if (confirm("Quit and delete chat history for everyone?")) {
-        socket.emit("destroyRoom"); // Tell server to wipe the room
-        localStorage.removeItem("last_room_id");
-        localStorage.removeItem("last_passcode");
-        localStorage.removeItem("last_secret_key");
-        window.location.href = "index.html";
-    }
+        if (confirm("Quit and delete chat history?")) {
+            if (window.Android) window.Android.showAd();
+            socket.emit("destroyRoom");
+            window.location.href = "index.html";
+        }
     });
-    document.getElementById("reportBtn").addEventListener("click", () => {
-    // roomId and passcode are already accessible from your existing variables
-    if (confirm("Report this room for unusual activity or policy violations?")) {
-        const adminEmail = "smessage2109@gmail.com";
-        const subject = encodeURIComponent(`SMessage Report: Room ${passcode}`);
-        const body = encodeURIComponent(
-            `REPORT DETAILS\n` +
-            `--------------------------\n` +
-            `Room ID: ${roomId}\n` +
-            `Passcode: ${passcode}\n\n` +
-            `USER DESCRIPTION:\n` +
-            `Please describe the activity you are reporting:`
-        );
-        
-        // This opens the default email client on Android/iOS
-        window.location.href = `mailto:${adminEmail}?subject=${subject}&body=${body}`;
-        
-        alert("Report generated. Please send the email so we can take action.");
-    }
-    });
-    /* ===============================
-   Auto-grow textarea + Enter send
-   =============================== */
 
-/* ===============================
-   Typing Status + Auto-grow
-   =============================== */
-/* =========================================
-   Typing Status + Auto-grow UI (Merged)
-   ========================================= */
-    /* =========================================
-       Typing Status + Auto-grow UI (Merged)
-       ========================================= */
-    let typingTimer; // <--- FIX 1: Define the timer variable here
-
+    // Typing Logic
+    let typingTimer;
     input.addEventListener("input", () => {
-        // 1. Send Typing Signal to server.js
-        if (input.value.trim().length > 0) {
-            socket.emit("typing"); 
-        } else {
-            socket.emit("stopTyping"); 
-        }
-
+        socket.emit(input.value.trim().length > 0 ? "typing" : "stopTyping");
         clearTimeout(typingTimer);
-        typingTimer = setTimeout(() => {
-            socket.emit("stopTyping");
-        }, 2000);
-
-        // 2. Handle Auto-grow UI logic
+        typingTimer = setTimeout(() => socket.emit("stopTyping"), 2000);
         input.style.height = "auto";
-        input.style.height = input.scrollHeight + "px";
-
-        if (input.scrollHeight > 110) {
-            input.style.height = "110px";
-            input.style.overflowY = "auto";
-        } else {
-            input.style.overflowY = "hidden";
-        }
+        input.style.height = Math.min(input.scrollHeight, 110) + "px";
     });
-
-    // --- FIX 2: Add these listeners so YOU can see when THEY type ---
-    const typingIndicator = document.getElementById("typingIndicator");
 
     socket.on("showTyping", ({ from }) => {
-        typingIndicator.style.display = "block";
-        typingIndicator.textContent = `${from} is typing...`;
+        document.getElementById("typingIndicator").style.display = "block";
+        document.getElementById("typingIndicator").textContent = `${from} is typing...`;
     });
-
-    socket.on("hideTyping", () => {
-        typingIndicator.style.display = "none";
-    });
-
-    // --- Enter to Send Logic ---
-    input.addEventListener("keydown", (e) => {
-        if (e.key === "Enter" && !e.shiftKey) {
-            e.preventDefault();
-            sendMessage();
-        }
-    });
+    socket.on("hideTyping", () => document.getElementById("typingIndicator").style.display = "none");
 
 })(); // Close the IIFE
 </script>
