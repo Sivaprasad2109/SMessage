@@ -47,6 +47,28 @@ if (window.Android) window.Android.setBannerVisible(false);
     const messagesDiv = document.getElementById("messages");
     const input = document.getElementById("messageInput");
     const sendBtn = document.getElementById("sendBtn");
+    // --- KEYBOARD & LAYOUT FIXES ---
+
+// FIX 1: Prevent keyboard from disappearing when clicking 'Send'
+// 'mousedown' happens before 'click' and 'focusout'
+sendBtn.addEventListener("mousedown", (e) => {
+    e.preventDefault(); // Prevents the input from losing focus
+});
+
+// FIX 2: Handle Send Button Click (keeping focus)
+sendBtn.addEventListener("click", () => {
+    sendMessage();
+    input.focus(); // Re-focus just in case of a glitch
+});
+
+// FIX 3: Handle 'Enter' key without a new line or losing focus
+input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault(); // Stops the new line (\n)
+        sendMessage();
+        // Focus stays on input, so keyboard stays up
+    }
+});
     let replyToMsg = null; // Tracks which message is being replied to
 
     document.getElementById("roomIdBox").textContent = `Code: ${passcode}`;
@@ -107,7 +129,8 @@ if (window.Android) window.Android.setBannerVisible(false);
         div.setAttribute("data-id", msgId);
         
         let replyHtml = replyData ? `<div class="sm-reply-preview">Replying to: ${replyData}</div>` : "";
-        let statusHtml = side === "right" ? `<span class="sm-status" style="font-size:0.6rem; margin-left:5px;">✔</span>` : "";
+        // Inside addMessage function...
+        let statusHtml = side === "right" ? `<span class="sm-status">✔</span>` : "";
 
         div.innerHTML = `
             ${replyHtml}
