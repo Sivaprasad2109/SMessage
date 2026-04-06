@@ -59,6 +59,7 @@ html, body {
     justify-content: center;
     position: relative;
     padding: 10px;
+    overflow: hidden;
 }
 
 .sm-page-bg::before {
@@ -141,7 +142,7 @@ html, body {
     
     /* FIX: Changed 'height' to 'max-height' */
     /* This allows the box to shrink when the keyboard pushes up */
-    max-height: 90dvh; 
+    max-height: 100dvh; 
     
     padding: 10px; 
     box-sizing: border-box;
@@ -327,13 +328,20 @@ html, body {
 }
 
 /* Visual cue for the 'Seen' checkmarks */
+/* Visual cue for the 'Seen' checkmarks */
 .sm-status {
-    color: #0a53c9;
+    color: rgba(255, 255, 255, 0.6); /* Soft white: visible on blue, subtle */
     font-weight: bold;
+    font-size: 0.65rem;
+    margin-left: 5px;
     display: inline-block;
     transition: all 0.3s ease;
 }
 
+/* New: Bright color for when the message is actually read */
+.sm-status.seen {
+    color: #ffffff !important; /* Bright Cyan/Blue tick */
+}
 /* Optional: Animation for the swipe-to-reply gesture */
 .sm-msg {
     transition: transform 0.1s ease-out;
