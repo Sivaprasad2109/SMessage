@@ -14,20 +14,26 @@
 }
 
 html, body {
-    height: 100%;
+    /* Use min-height: 100vh to allow the gradient to cover everything,
+       but avoid 'overflow: hidden' so the user can scroll if needed. */
+    min-height: 100dvh; 
     width: 100%;
-    overflow: hidden; /* Prevents global scroll to maintain fixed app layout */
+    margin: 0;
+    padding: 0;
+    /* This ensures your app background goes behind the system bars */
+    background: #0a3d91; 
 }
 
 /* -------------------------
    Logo & Branding
    ------------------------- */
 .sm-logo-container {
+    /* Ensure the logo stays clear of the Status Bar clock */
+    margin-top: 10px;
     width: 100%;
-    padding: 10px 0 12px 0; 
+    padding: 10px 0; 
     display: flex;
     justify-content: center;
-    align-items: center;
 }
 
 .sm-logo-img {
@@ -49,19 +55,30 @@ html, body {
    Page Background & Animations
    ------------------------- */
 .sm-page-bg {
-    height: 100dvh; /* Dynamic viewport height for mobile browsers */
+    /* REMOVE: height: 100dvh; (This causes 'jumping' with the keyboard) */
+    min-height: 100dvh; 
     width: 100vw;
     background: linear-gradient(135deg, #0a3d91, #1e62d0, #2f8bff);
     background-size: 400% 400%;
     animation: smGradientMove 12s ease infinite;
     display: flex;
+    flex-direction: column; /* Changed to column to stack logo and card */
     align-items: center;
     justify-content: center;
     position: relative;
-    padding: 10px;
-    overflow: hidden;
+    
+    /* EDGE-TO-EDGE SUPPORT:
+       Respect the Status Bar (Top) and Navigation Bar (Bottom) */
+    padding-top: calc(10px + env(safe-area-inset-top)) !important;
+    
+    /* ADD SPACE FOR THE BOTTOM BANNER:
+       50px (Ad Height) + safe-area-inset-bottom (Android Home Bar) */
+    padding-bottom: calc(60px + env(safe-area-inset-bottom)) !important;
+    
+    padding-left: 10px;
+    padding-right: 10px;
+    overflow-y: auto; /* Allow vertical scrolling if the card is big */
 }
-
 .sm-page-bg::before {
     content: "";
     position: absolute;
@@ -302,9 +319,10 @@ html, body {
    ------------------------- */
 @media (max-width: 600px) {
     .sm-chat-wrap {
-        height: auto; /* Let content define height */
-        max-height: 95dvh;
-        margin-bottom: 5px; /* Adds a tiny gap above the keyboard */
+        /* When keyboard opens, max-height ensures the chat box 
+           resizes instead of going off-screen */
+        max-height: calc(95dvh - 60px - env(safe-area-inset-bottom));
+        margin-bottom: 5px;
     }
 }
 @keyframes typingPulse {
