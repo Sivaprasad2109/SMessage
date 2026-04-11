@@ -22,8 +22,8 @@
   </div>
 </header>
     <section class="sm-chat-card">
-      <div id="typingIndicator" style="display:none; text-align:center;">Friend is typing...</div>
       <div id="messages" class="sm-messages"></div>
+      <div id="typingIndicator" style="display:none; text-align:center;">Friend is typing...</div>
       <div class="sm-input-row">
         <textarea id="messageInput" class="sm-message-input" placeholder="Type..." rows="1"></textarea>
         <button id="sendBtn" class="sm-send-btn">Send</button>
@@ -168,9 +168,13 @@ input.addEventListener("keydown", (e) => {
     }
 
     // --- EXISTING LOGIC (TIMER, QUIT, REPORT) ---
+    // --- FEATURE 3: RED TIMER & ALERT LOGIC ---
+    let alertShown = false; // Prevents the alert from showing multiple times per second
+
     const timerInterval = setInterval(() => {
         const now = Date.now();
         const diff = expireAt - now;
+
         if (diff <= 0) {
             clearInterval(timerInterval);
             if (window.Android) window.Android.showAd();
@@ -178,9 +182,36 @@ input.addEventListener("keydown", (e) => {
         } else {
             const m = Math.floor(diff / 60000);
             const s = Math.floor((diff % 60000) / 1000);
-            document.getElementById("timerBox").textContent = `${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
+            const timerBox = document.getElementById("timerBox");
+            timerBox.textContent = `${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
+
+            // Check if 3 minutes (180,000ms) or less are remaining
+            if (diff <= 180000) {
+                // Add the urgent red pulsing class from your style.css
+                timerBox.classList.add("sm-timer-urgent");
+
+                // Show the floating alert only once when the threshold is hit
+                if (!alertShown) {
+                    showFloatingWarning("3 Minutes Remaining! Wrap up your chat.");
+                    alertShown = true;
+                }
+            }
         }
     }, 1000);
+
+    // Helper function to create and show the floating alert
+    function showFloatingWarning(text) {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = 'sm-floating-alert';
+        alertDiv.textContent = text;
+        document.body.appendChild(alertDiv);
+
+        // Remove the alert after 5 seconds
+        setTimeout(() => {
+            alertDiv.style.opacity = '0';
+            setTimeout(() => alertDiv.remove(), 500);
+        }, 5000);
+    }
 
     socket.on("connect", () => { socket.emit("joinRoom", { roomId, passcode, name: myName }); });
     sendBtn.addEventListener("click", sendMessage);
