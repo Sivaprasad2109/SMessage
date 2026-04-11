@@ -365,3 +365,63 @@ html, body {
     transition: transform 0.1s ease-out;
     position: relative;
 }
+.sm-room-size-selector {
+    margin-top: 10px;
+    text-align: center;
+}
+.sm-size-chips {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 8px;
+}
+/* Hide the actual radio button, style the label as a button */
+.sm-size-chips input { display: none; }
+.sm-size-chips label {
+    padding: 8px 16px;
+    border: 2px solid #0a53c9;
+    border-radius: 10px;
+    color: #0a53c9;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s;
+}
+.sm-size-chips input:checked + label {
+    background: #0a53c9;
+    color: #fff;
+}
+/* The 'Urgent' state for the timer */
+.sm-timer-urgent {
+    color: #ff4d4d !important; /* Bright Red */
+    background: rgba(255, 77, 77, 0.2) !important;
+    border: 1px solid #ff4d4d;
+    animation: timerPulse 1s infinite ease-in-out;
+}
+
+@keyframes timerPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+/* Floating Alert Message */
+.sm-floating-alert {
+    position: fixed;
+    top: 80px; /* Below the header */
+    left: 50%;
+    transform: translateX(-50%);
+    background: #ff4d4d;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    z-index: 2000;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    animation: slideDownIn 0.5s ease forwards;
+}
+
+@keyframes slideDownIn {
+    from { top: -50px; opacity: 0; }
+    to { top: 80px; opacity: 1; }
+}
