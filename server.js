@@ -131,17 +131,16 @@ socket.on("messageSeen", ({ roomId, msgId }) => {
     const uName = socket.userName || "User"; 
 
     if (rId) {
-        // Delay check to see if they actually left or just refreshed
+        // 1. INSTANTLY update the count so the spot is open for a rejoin
+        const roomNow = io.sockets.adapter.rooms.get(rId);
+        const currentSize = roomNow ? roomNow.size : 0;
+        io.to(rId).emit("updateUserCount", currentSize);
+
+        // 2. DELAYED notification to keep the chat clean
         setTimeout(() => {
-            const room = io.sockets.adapter.rooms.get(rId);
-            
-            // 1. Notify only if someone is still in the room to hear it
-            if (room) {
+            const roomLater = io.sockets.adapter.rooms.get(rId);
+            if (roomLater) {
                 io.to(rId).emit("systemMessage", `${uName} went offline.`);
-                
-                // 2. SEND UPDATED COUNT TO REMAINING USER
-                const currentSize = room.size;
-                io.to(rId).emit("updateUserCount", currentSize);
             }
         }, 2000); 
     }
