@@ -13,7 +13,7 @@
     /* Premium Corner Button Styling */
     .premium-corner {
       position: absolute;
-      top: 20px;
+      top: 100px;
       right: 20px;
       z-index: 1000;
     }
@@ -21,8 +21,9 @@
     .sm-btn-premium {
       background: linear-gradient(135deg, #ffc107, #ff9800);
       color: #d4ff00;
+      position: relative;
       border: none;
-      padding: 8px 16px;
+      padding: 8px 10px;
       border-radius: 25px;
       font-size: 0.8rem;
       font-weight: 600;
@@ -91,7 +92,20 @@
           </div>
         </div>
       </div>
-      
+      <div class="sm-room-size-selector">
+        <p class="sm-subtitle">Room Capacity:</p>
+      <div class="sm-size-chips">
+        <input type="radio" name="roomSize" value="2" id="size2" checked>
+        <label for="size2">2P</label>
+        
+        <input type="radio" name="roomSize" value="4" id="size4">
+        <label for="size4">4P</label>
+        
+        <input type="radio" name="roomSize" value="6" id="size6">
+        <label for="size6">6P</label>
+       </div>
+      </div>
+
       <div id="termsModal" class="sm-modal" role="dialog" aria-modal="true" aria-hidden="true">
         <div class="sm-modal-inner" role="document" style="max-width: 500px;">
           <h4>SMessage Terms & Conditions</h4>
@@ -134,9 +148,6 @@
           <a href="privacy.html">Privacy Policy</a>
           <a href="terms.html">Terms of Service</a>
           <a href="#" id="restorePurchaseBtn" style="font-size: 0.7rem; opacity: 0.7;">Restore Purchase</a>
-        </div>
-        <div class="sm-footer-note">
-          <small>🔒 Passcodes link you to encrypted sessions. No data is stored on our servers after room expire</small>
         </div>
       </footer>
     </section>
@@ -208,9 +219,16 @@ restoreBtn.addEventListener('click', (e) => {
         window.Android.showAd(); 
     }
     if (createBtn.disabled) return;
+
+    // --- FEATURE 4: GRAB SELECTED CAPACITY ---
+    const selectedSize = document.querySelector('input[name="roomSize"]:checked').value;
+    console.log("Creating room with capacity:", selectedSize);
+
     createBtn.disabled = true;
     createBtn.textContent = 'Generating Code...';
-    socket.emit('createRoom');
+
+    // Pass the capacity to your backend socket
+    socket.emit('createRoom', { capacity: parseInt(selectedSize) }); 
   });
 
   socket.on('roomCreated', ({ passcode, roomId, expireAt }) => {
