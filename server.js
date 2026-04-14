@@ -35,18 +35,23 @@ function generateUniquePasscode() {
 
 io.on("connection", (socket) => {
   
-  socket.on("createRoom", () => {
+// --- Updated Create Room: Receives 'capacity' from UI ---
+  socket.on("createRoom", (data) => {
     const passcode = generateUniquePasscode();
     const roomId = crypto.randomBytes(16).toString("hex");
     const expiresIn = 15 * 60 * 1000; 
     const expireAt = Date.now() + expiresIn;
 
-    rooms.set(passcode, { roomId, expireAt });
+    // Capture capacity from data, default to 2 if not provided
+    const capacity = data && data.capacity ? data.capacity : 2;
+
+    // Store the maxCapacity in your rooms Map
+    rooms.set(passcode, { roomId, expireAt, maxCapacity: capacity });
     roomIds.set(roomId, passcode);
 
     socket.join(roomId);
     socket.roomId = roomId;
-    socket.userName = "Creator"; // Default name for the creator
+    socket.userName = "Creator"; 
     socket.emit("roomCreated", { passcode, roomId, expireAt });
 
     setTimeout(() => {
@@ -59,6 +64,7 @@ io.on("connection", (socket) => {
     }, expiresIn);
   });
 
+  // --- Updated Join Room: Checks against stored maxCapacity ---
   socket.on("joinRoom", ({ passcode, roomId, name }) => {
     let roomData = null;
     if (passcode) roomData = rooms.get(String(passcode).trim());
@@ -72,10 +78,10 @@ io.on("connection", (socket) => {
       return;
     }
 
-    // FIX 1: Allow One-to-One only (Max 2 users)
+    // Use roomData.maxCapacity instead of a hardcoded 2
     const currentRoom = io.sockets.adapter.rooms.get(roomData.roomId);
-    if (currentRoom && currentRoom.size >= 2) {
-      socket.emit("systemMessage", "This room is full. Only 2 people allowed.");
+    if (currentRoom && currentRoom.size >= roomData.maxCapacity) {
+      socket.emit("systemMessage", `Room is full! Limit is ${roomData.maxCapacity} persons.`);
       return;
     }
 
@@ -84,7 +90,6 @@ io.on("connection", (socket) => {
     const currentSize = io.sockets.adapter.rooms.get(roomData.roomId)?.size || 0;
     io.to(roomData.roomId).emit("updateUserCount", currentSize);
     
-    // FIX 2: Ensure name is captured correctly (fallback to 'Guest')
     socket.userName = name && name.trim() !== "" ? name : "Guest";
 
     socket.emit("joinSuccess", { 
@@ -93,7 +98,6 @@ io.on("connection", (socket) => {
         expireAt: roomData.expireAt 
     });
 
-    // FIX 3: Notify everyone in the room that a specific user joined
     io.to(roomData.roomId).emit("systemMessage", `${socket.userName} joined.`);
   });
 
