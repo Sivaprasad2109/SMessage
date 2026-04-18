@@ -425,29 +425,30 @@ html, body {
     from { top: -50px; opacity: 0; }
     to { top: 80px; opacity: 1; }
 }
+/* Update your grid to ensure 3 or 4 clear columns */
 .sm-avatar-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr); /* 4 icons per row */
-    gap: 12px;
-    margin: 15px 0;
-    max-height: 200px; /* Limits height so it doesn't push the button off-screen */
-    overflow-y: auto;
+    grid-template-columns: repeat(3, 1fr); /* 3 per row makes them larger on mobile */
+    gap: 15px;
+    margin: 20px 0;
     padding: 10px;
-    background: #f8f9fc;
-    border-radius: 12px;
+    background: rgba(248, 249, 252, 0.5);
+    border-radius: 15px;
+    justify-items: center;
 }
 
 .sm-avatar-img {
-    width: 60px;
-    height: 60px;
+    width: 80px;  /* Increase from 60px to 80px for better visibility */
+    height: 80px;
     border-radius: 50%;
     border: 3px solid transparent;
-    cursor: pointer;
-    transition: transform 0.2s, border-color 0.2s;
-    object-fit: cover;
+    object-fit: cover; /* Ensures the face isn't squished */
+    transition: transform 0.2s;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
 }
 
 .sm-avatar-img.selected {
-    border-color: #0a53c9; /* SMessage Blue */
+    border-color: #0a53c9;
     transform: scale(1.1);
+    box-shadow: 0 0 15px rgba(10, 83, 201, 0.4); /* Adds a glow to the blue circle */
 }
