@@ -83,7 +83,7 @@ const broadcastPresence = (rId) => {
   });
 
   // --- Updated Join Room: Checks against stored maxCapacity ---
-  socket.on("joinRoom", ({ passcode, roomId, name }) => {
+  socket.on("joinRoom", ({ passcode, roomId, name, avatar }) => {
     let roomData = null;
     if (passcode) roomData = rooms.get(String(passcode).trim());
     else if (roomId) {
