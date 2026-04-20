@@ -34,6 +34,24 @@ function generateUniquePasscode() {
 }
 
 io.on("connection", (socket) => {
+  // --- NEW HELPER: Broadcast the list of active users ---
+const broadcastPresence = (rId) => {
+    const clients = io.sockets.adapter.rooms.get(rId);
+    const users = [];
+    if (clients) {
+        for (const clientId of clients) {
+            const clientSocket = io.sockets.sockets.get(clientId);
+            if (clientSocket) {
+                users.push({ 
+                    name: clientSocket.userName || "Guest", 
+                    avatar: clientSocket.userAvatar || "f1.png" 
+                });
+            }
+        }
+    }
+    // Emit the full list of participants to everyone in the room
+    io.to(rId).emit("updateParticipants", users);
+};
   
 // --- Updated Create Room: Receives 'capacity' from UI ---
   socket.on("createRoom", (data) => {
@@ -91,6 +109,7 @@ io.on("connection", (socket) => {
     io.to(roomData.roomId).emit("updateUserCount", currentSize);
     
     socket.userName = name && name.trim() !== "" ? name : "Guest";
+    socket.userAvatar = avatar || "f1.png";
 
     socket.emit("joinSuccess", { 
         roomId: roomData.roomId, 
@@ -99,6 +118,7 @@ io.on("connection", (socket) => {
     });
 
     io.to(roomData.roomId).emit("systemMessage", `${socket.userName} joined.`);
+    broadcastPresence(roomData.roomId);
   });
 
   socket.on("sendMessage", ({ message, msgId, replyTo }) => {
@@ -135,18 +155,22 @@ socket.on("messageSeen", ({ roomId, msgId }) => {
     const uName = socket.userName || "User"; 
 
     if (rId) {
-        // 1. INSTANTLY update the count so the spot is open for a rejoin
+        // 1. Update the numerical count immediately for logic checks
         const roomNow = io.sockets.adapter.rooms.get(rId);
         const currentSize = roomNow ? roomNow.size : 0;
         io.to(rId).emit("updateUserCount", currentSize);
 
-        // 2. DELAYED notification to keep the chat clean
+        // 2. FEATURE: Refresh the Presence Bar
+        // We use a small delay to ensure the socket has fully left the room adapter
         setTimeout(() => {
+            broadcastPresence(rId); 
+            
+            // 3. Optional: Only show the "offline" text if the room still exists
             const roomLater = io.sockets.adapter.rooms.get(rId);
             if (roomLater) {
                 io.to(rId).emit("systemMessage", `${uName} went offline.`);
             }
-        }, 2000); 
+        }, 1000); 
     }
 });
 
