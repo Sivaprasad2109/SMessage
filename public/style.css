@@ -452,3 +452,18 @@ html, body {
     transform: scale(1.1);
     box-shadow: 0 0 15px rgba(10, 83, 201, 0.4); /* Adds a glow to the blue circle */
 }
+.sm-presence-avatar {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    border: 2px solid #0a3d91; /* SMessage Blue border to separate them */
+    background: #fff;
+    object-fit: cover;
+    transition: all 0.3s ease;
+}
+
+/* Optional: Make the avatars glow when someone is typing */
+.sm-presence-avatar.typing {
+    border-color: #4CAF50;
+    box-shadow: 0 0 8px #4CAF50;
+}
