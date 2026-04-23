@@ -9,15 +9,10 @@
 <body class="sm-page-bg">
   <main class="sm-chat-wrap">
     <header class="sm-chat-header">
-  <div class="sm-header-info" style="display: flex; align-items: center; gap: 10px;">
-    <div id="presenceBar" style="display: flex; align-items: center;"></div>
-    <div>
-        <div id="headerStatus" class="sm-chat-title" style="font-weight: 600; font-size: 0.9rem;">
-            Waiting...
-        </div>
-        <div class="sm-chat-sub" style="font-size: 0.7rem; opacity: 0.8;">Encrypted</div>
-    </div>
-    </div>
+  <div class="sm-header-info">
+    <div class="sm-chat-title" style="font-weight: 600;">Private Room</div>
+    <div class="sm-chat-sub" style="font-size: 0.75rem; opacity: 0.8;">Encrypted</div>
+  </div>
   <div class="sm-room-meta">
     <button id="reportBtn" class="sm-btn" style="background: rgba(255,255,255,0.15); color: #fff; padding: 6px 10px; font-size: 0.8rem; border: 1px solid rgba(255,255,255,0.3); margin-right: 5px;">🚩 Report</button>
     
@@ -26,6 +21,15 @@
     <button id="quitBtn" class="sm-btn" style="background:#fff; color:#0a53c9; padding: 6px 12px; font-size: 0.85rem; border-radius: 8px;">Quit</button>
   </div>
 </header>
+<div class="sm-presence-wrapper">
+    <div class="sm-presence-card">
+        <div id="presenceBar" class="sm-avatar-stack"></div>
+        <div class="sm-presence-info">
+            <span id="headerStatus" class="sm-status-text">Waiting for friends...</span>
+            <span class="sm-encrypted-tag">🔒 End-to-End Encrypted</span>
+        </div>
+    </div>
+</div>
     <section class="sm-chat-card">
       <div id="messages" class="sm-messages"></div>
       <div id="typingIndicator" style="display:none; text-align:center;">Friend is typing...</div>
