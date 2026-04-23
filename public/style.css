@@ -198,7 +198,7 @@ html, body {
 
 .sm-chat-card {
     flex: 1; /* Card fills the available container space */
-    background: #fff;
+    background: #ffffff;
     border-radius: 20px;
     padding: 12px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
@@ -467,4 +467,59 @@ html, body {
 .sm-presence-avatar.typing {
     border-color: #4CAF50;
     box-shadow: 0 0 8px #4CAF50;
+}
+/* Container to provide spacing below the main header */
+/* Container for the separate card */
+/* Container for the separate card */
+.sm-presence-wrapper {
+    width: 100%;
+    padding: 0 12px;
+    margin-top: 5px; 
+    z-index: 5;
+}
+
+/* Glassy Card Effect */
+.sm-presence-card {
+    /* Semi-transparent white */
+    background: rgba(3, 3, 247, 0.156); 
+    /* Blur effect for glass look */
+    backdrop-filter: blur(10px); 
+    -webkit-backdrop-filter: blur(10px);
+    border-radius: 18px; 
+    padding: 10px 15px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.sm-avatar-stack {
+    display: flex;
+    align-items: center;
+    /* Remove negative margin to place side-by-side */
+    gap: 8px; 
+}
+
+.sm-presence-avatar {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    /* Remove negative margin so they don't overlap */
+    margin-right: 0; 
+    border: 2px solid rgba(255, 255, 255, 0.8);
+    object-fit: cover;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.sm-status-text {
+    font-weight: 600;
+    color: #f1f9f9aa;
+    font-size: 0.85rem;
+}
+
+.sm-encrypted-tag {
+    font-size: 0.6rem;
+    color: #050505aa;
+    display: block;
 }
