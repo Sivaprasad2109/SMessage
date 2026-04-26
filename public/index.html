@@ -3,325 +3,191 @@
 <head>
   <meta name="theme-color" content="#0a3d91">
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
   <title>SMessage</title>
-
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
-  
-  <style>
-    /* Premium Corner Button Styling */
-    .premium-corner {
-      position: absolute;
-      top: 100px;
-      right: 20px;
-      z-index: 1000;
-    }
-
-    .sm-btn-premium {
-      background: linear-gradient(135deg, #ffc107, #ff9800);
-      color: #d4ff00;
-      position: relative;
-      border: none;
-      padding: 8px 10px;
-      border-radius: 25px;
-      font-size: 0.8rem;
-      font-weight: 600;
-      font-family: 'Poppins', sans-serif;
-      box-shadow: 0 4px 12px rgba(255, 193, 7, 0.4);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      transition: all 0.3s ease;
-    }
-
-    .sm-btn-premium:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 15px rgba(255, 193, 7, 0.5);
-    }
-
-    .sm-btn-premium:active {
-      transform: scale(0.95);
-    }
-
-    /* Hide the button once the user is PRO */
-    .user-is-pro .premium-corner {
-      display: none;
-    }
-  </style>
 </head>
 
-<body class="sm-page-bg">
+<body class="sm-page-bg modern-ui">
 
-  <div class="premium-corner">
-    <button id="removeAdsBtn" class="sm-btn-premium">
-      <span>✨</span> Remove Ads
-    </button>
-  </div>
-
-  <main class="sm-center-wrap">
-    <section class="sm-app-card" role="region" aria-labelledby="app-title">
-      <header class="sm-card-header">
-        <h1 id="app-title" class="sm-app-title">SMessage <span class="sm-bubble">💬</span></h1>
-        <p class="sm-subtitle">Secure temporary chat rooms. No sign-up. End-to-end encrypted.</p>
-      </header>
-
-      <div class="sm-logo-container">
-        <img src="SMessage.png" alt="SMessage Logo" class="sm-logo-img">
+  <header class="sm-main-header">
+    <div class="sm-brand">
+      <img src="SMessage.png" alt="SMessage Logo" class="sm-app-icon-mini">
+      <div>
+        <h1 class="sm-title">SMessage</h1>
+        <p class="sm-tagline">Secure. Private. Temporary.</p>
       </div>
-
-      <div class="sm-cta-row">
-        <button id="createRoomBtn" class="sm-btn sm-btn-primary sm-big">Create Room</button>
-        <button id="openJoinWindowBtn" class="sm-btn sm-btn-outline sm-big">Join Room</button>
-      </div>
-
-      <div id="linkDisplay" class="sm-link-display" aria-live="polite"></div>
-
-      <div id="joinRoomPopup" class="sm-modal" role="dialog" aria-modal="true" aria-hidden="true">
-        <div class="sm-modal-inner" role="document">
-          <h4>Enter Room Passcode</h4>
-          <p style="font-size: 0.8rem; color: #666; margin-bottom: 10px;">Ask your friend for their 6-digit code.</p>
-          <input id="joinRoomInput" type="number" placeholder="000000" 
-                 style="text-align: center; font-size: 1.5rem; letter-spacing: 8px;"
-                 oninput="if(this.value.length > 6) this.value = this.value.slice(0, 6);" />
-          
-          <div class="sm-modal-actions">
-            <button id="joinRoomSubmit" class="sm-btn sm-btn-primary">Connect</button>
-            <button id="closeJoinPopup" class="sm-btn sm-btn-ghost">Cancel</button>
-          </div>
-        </div>
-      </div>
-      <div class="sm-room-size-selector">
-        <p class="sm-subtitle">Room Capacity:</p>
-      <div class="sm-size-chips">
-        <input type="radio" name="roomSize" value="2" id="size2" checked>
-        <label for="size2">2P</label>
-        
-        <input type="radio" name="roomSize" value="4" id="size4">
-        <label for="size4">4P</label>
-        
-        <input type="radio" name="roomSize" value="6" id="size6">
-        <label for="size6">6P</label>
-       </div>
-      </div>
-
-      <div id="termsModal" class="sm-modal" role="dialog" aria-modal="true" aria-hidden="true">
-        <div class="sm-modal-inner" role="document" style="max-width: 500px;">
-          <h4>SMessage Terms & Conditions</h4>
-          <div style="height: 180px; overflow-y: scroll; padding: 10px; border: 1px solid #ddd; font-size: 0.85rem; line-height: 1.4;">
-            <p>By using SMessage, you agree to these Terms of Service. All messages are temporary and deleted upon room expiration.</p>
-            <p style="margin-top: 10px;">Please read the full <a href="terms.html" target="_blank" style="color:#0a53c9;">Terms of Service</a> and <a href="privacy.html" target="_blank" style="color:#0a53c9;">Privacy Policy</a>.</p>
-          </div>
-          <div style="display: flex; align-items: center; gap: 10px; margin-top: 15px;">
-            <input type="checkbox" id="acceptTermsCheckbox" style="width: 20px; height: 20px; margin: 0;">
-            <label for="acceptTermsCheckbox" style="font-size: 0.95rem; color: #333;">I agree to the Terms & Conditions.</label>
-          </div>
-          <button id="agreeAndContinueBtn" class="sm-btn" disabled style="margin-top: 10px; width: 100%; opacity: 0.5;">Agree and Continue</button>
-        </div>
-      </div>
-
-      <div id="pricingModal" class="sm-modal" role="dialog" aria-modal="true" aria-hidden="true">
-  <div class="sm-modal-inner" role="document" style="max-width: 400px; text-align: center;">
-    <h3 style="color: #0a3d91; margin-bottom: 15px;">✨ SMessage Pro</h3>
-    <div style="background: #eef3ff; padding: 20px; border-radius: 15px; margin-bottom: 20px;">
-      <div style="font-size: 3rem; margin-bottom: 10px;">🚀</div>
-      <h4 style="margin: 0; color: #0a3d91;">Coming Soon!</h4>
-      <p style="font-size: 0.9rem; color: #555; margin-top: 10px;">
-        We are working on bringing you a premium ad-free experience. Stay tuned!
-      </p>
     </div>
-    <button id="closePricingBtn" class="sm-btn sm-btn-primary" style="width: 100%;">Great, I'll Wait!</button>
-  </div>
-</div>
+    <button id="removeAdsBtn" class="sm-premium-pill">
+      <span><svg width="16" height="16" viewBox="0 0 24 24" fill="#FFB000" xmlns="http://www.w3.org/2000/svg" style="vertical-align: middle; margin-right: 4px; margin-top: -2px;"><path d="M2.5 19h19v2h-19v-2zm1.5-12.5l4 3.5 4-6 4 6 4-3.5v9h-16v-9z"/></svg></span>Go Ad-Free
+    </button>
+  </header>
 
-      <footer class="sm-card-footer">
-        <div style="margin-bottom: 15px;">
-          <a href="mailto:smessage2109@gmail.com?subject=Report Unusual Activity&body=Please describe the issue:" 
-             class="sm-btn sm-btn-ghost" 
-             style="font-size: 0.8rem; border: 1px solid #ffffff; color: #ffffff !important; width: 100%; display: block; padding: 10px;">
-             Report Unusual Activity
-          </a>
+  <main class="sm-content-scroll">
+    <section class="sm-hero-carousel">
+      <div class="sm-hero-card glassy-hero">
+        <div class="hero-content">
+          <span class="sm-step-indicator glassy-pill">01 / 03</span>
+          <h2>Messaging<br>made <span>private</span></h2>
+          <p>End-to-end encrypted<br>temporary chat rooms.</p>
+          <div class="sm-badge-secure"><span class="check-icon">✔</span> 100% Secure</div>
         </div>
+        <div class="hero-image-wrapper" style="display: flex; align-items: center; justify-content: center;">
+          <div style="font-size: 100px; opacity: 0.5;">🔒</div>
+        </div>
+      </div>
+      <div class="sm-hero-card glassy-hero" style="background: linear-gradient(135deg, rgba(255, 245, 239, 0.9), rgba(255, 235, 225, 0.7));">
+        <div class="hero-content">
+          <span class="sm-step-indicator glassy-pill">02 / 03</span>
+          <h2 style="color: #d35400;">Auto-delete<br><span style="color: #e67e22;">everywhere</span></h2>
+          <p>Chats self-destruct once<br>everyone leaves.</p>
+          <div class="sm-badge-secure" style="color:#d35400;"><span class="check-icon" style="background:#d35400;">✔</span> Zero Footprint</div>
+        </div>
+        <div class="hero-image-wrapper" style="display: flex; align-items: center; justify-content: center;">
+          <div style="font-size: 100px; opacity: 0.5;">⏱️</div>
+        </div>
+      </div>
+      <div class="sm-hero-card glassy-hero" style="background: linear-gradient(135deg, rgba(239, 255, 245, 0.9), rgba(225, 255, 235, 0.7));">
+        <div class="hero-content">
+          <span class="sm-step-indicator glassy-pill">03 / 03</span>
+          <h2 style="color: #27ae60;">No sign-up<br><span style="color: #2ecc71;">required</span></h2>
+          <p>Jump right in with just<br>a 6-digit passcode.</p>
+          <div class="sm-badge-secure" style="color:#27ae60;"><span class="check-icon" style="background:#27ae60;">✔</span> Anonymous</div>
+        </div>
+        <div class="hero-image-wrapper" style="display: flex; align-items: center; justify-content: center;">
+          <div style="font-size: 100px; opacity: 0.5;">🎭</div>
+        </div>
+      </div>
+    </section>
+    <div class="sm-carousel-dots" style="margin-bottom: 20px;">
+      <span class="dot active"></span><span class="dot"></span><span class="dot"></span>
+    </div>
 
-        <div class="sm-footer-links">
-          <a href="privacy.html">Privacy Policy</a>
-          <a href="terms.html">Terms of Service</a>
-          <a href="#" id="restorePurchaseBtn" style="font-size: 0.7rem; opacity: 0.7;">Restore Purchase</a>
+    <h3 class="sm-section-label">Features</h3>
+    <section class="sm-feature-grid">
+      <div class="sm-f-card glassy-card">
+        <div class="sm-f-icon-wrap blue-grad"><span class="icon">🛡</span></div>
+        <h4>End-to-end Encrypted</h4>
+        <p>Your messages stay private</p>
+      </div>
+      <div class="sm-f-card glassy-card">
+        <div class="sm-f-icon-wrap green-grad"><span class="icon">🕒</span></div>
+        <h4>Auto-delete Chats</h4>
+        <p>Rooms and messages disappear</p>
+      </div>
+      <div class="sm-f-card glassy-card">
+        <div class="sm-f-icon-wrap purple-grad"><span class="icon">🎭</span></div>
+        <h4>No Sign-up Required</h4>
+      </div>
+    </section>
+
+
+
+    <section class="sm-link-list">
+      <div class="sm-list-item glass-action-card full-width">
+        <div class="action-card-left">
+          <span class="icon-circle border-icon"><span class="icon">🔒</span></span>
+          <p>Passcodes link you to encrypted sessions.<br>No data is stored on our servers.</p>
         </div>
-      </footer>
+        <svg class="chevron-icon" width="8" height="13" viewBox="0 0 8 13" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1.5 1.5L6.5 6.5L1.5 11.5" stroke="#1A2D53" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="sm-row-links">
+        <a href="mailto:smessage2109@gmail.com" class="sm-list-item glass-action-card half">
+          <div class="action-card-left">
+            <span class="icon-circle blue-tint"><span class="icon">💬</span></span>
+            <span class="title">Contact us</span>
+          </div>
+          <svg class="chevron-icon" width="8" height="13" viewBox="0 0 8 13" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1.5 1.5L6.5 6.5L1.5 11.5" stroke="#1A2D53" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+        <a href="https://play.google.com/store/search?q=smessage&c=apps&hl=en_IN" id="rateUsBtn" target="_blank" rel="noopener noreferrer" class="sm-list-item glass-action-card half">
+          <div class="action-card-left">
+            <span class="icon-circle blue-tint-dark"><span class="icon">⭐</span></span>
+            <span class="title">Rate us</span>
+          </div>
+          <svg class="chevron-icon" width="8" height="13" viewBox="0 0 8 13" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1.5 1.5L6.5 6.5L1.5 11.5" stroke="#1A2D53" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+      </div>
+      <!--
+      <div class="sm-footer-legal">
+        <a href="privacy.html">Privacy Policy</a> • <a href="terms.html">Terms of Service</a>
+      </div>
+      -->
     </section>
   </main>
 
-  <script src="crypto-js/crypto-js.js"></script>
-  <script src="https://blinkchat-i72t.onrender.com/socket.io/socket.io.js"></script>
+  <nav class="sm-bottom-nav">
+    <a href="index.html" class="nav-item active" style="text-decoration:none;">
+      <span class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="#2C64E3" xmlns="http://www.w3.org/2000/svg"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg></span>
+      <span>Home</span>
+    </a>
+    <a href="create.html" class="nav-item" style="text-decoration:none;">
+      <span class="icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#8C99B2" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg></span>
+      <span>Create</span>
+    </a>
+    <a href="join-room.html" class="nav-item" style="text-decoration:none;">
+      <span class="icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#8C99B2" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg></span>
+      <span>Join</span>
+    </a>
+  </nav>
 
-<script>
-if (window.Android) window.Android.setBannerVisible(true);
-window.addEventListener("load", () => {
-  const socket = io("https://blinkchat-i72t.onrender.com", {
-    transports: ["websocket", "polling"]
-  });
-// --- FETCH ADVERTISING ID FOR PRO STATUS ---
-async function getAndroidAdId() {
-  try {
-    // In Capacitor, plugins are accessed via Capacitor.Plugins
-    const { AdvertisingId } = Capacitor.Plugins;
-    
-    if (AdvertisingId) {
-      const response = await AdvertisingId.getAdvertisingId();
-      console.log("SMessage: Fetched Ad ID:", response.id);
-      
-      // Store it so you can use it when they click 'Remove Ads'
-      window.userAdId = response.id;
-      
-      // Check if this ID is already in your "Paid" list
-      // checkProStatus(response.id); 
-    }
-  } catch (error) {
-    console.warn("Could not get Ad ID. Standard mode active.", error);
-  }
-}
-
-// Call the function immediately
-getAndroidAdId();
-
-  // --- IAP LOGIC (REMOVE ADS) ---
-  // --- NEW IAP PRICING LOGIC ---
-// --- UPDATED IAP LOGIC (COMING SOON) ---
-const removeAdsBtn = document.getElementById('removeAdsBtn');
-const pricingModal = document.getElementById('pricingModal');
-const closePricingBtn = document.getElementById('closePricingBtn');
-
-// Open the "Coming Soon" modal
-removeAdsBtn.addEventListener('click', () => {
-  pricingModal.classList.add('sm-modal-open');
-});
-
-// Close the modal
-closePricingBtn.addEventListener('click', () => {
-  pricingModal.classList.remove('sm-modal-open');
-});
-
-// Restore button logic (Google required even if feature is coming soon)
-const restoreBtn = document.getElementById('restorePurchaseBtn');
-restoreBtn.addEventListener('click', (e) => {
-  e.preventDefault();
-  alert("No previous purchases found. Ad-free features are coming soon!");
-});
-
-  // --- ROOM LOGIC ---
-  const linkDisplay = document.getElementById('linkDisplay');
-  const createBtn = document.getElementById('createRoomBtn');
-
-  createBtn.addEventListener('click', () => {
-    if (window.Android) {
-        window.Android.showAd(); 
-    }
-    if (createBtn.disabled) return;
-
-    // --- FEATURE 4: GRAB SELECTED CAPACITY ---
-    const selectedSize = document.querySelector('input[name="roomSize"]:checked').value;
-    console.log("Creating room with capacity:", selectedSize);
-
-    createBtn.disabled = true;
-    createBtn.textContent = 'Generating Code...';
-
-    // Pass the capacity to your backend socket
-    socket.emit('createRoom', { capacity: parseInt(selectedSize) }); 
-  });
-
-  socket.on('roomCreated', ({ passcode, roomId, expireAt }) => {
-    createBtn.disabled = false;
-    createBtn.textContent = 'Create Room';
-
-    const secretKey = CryptoJS.SHA256(passcode).toString();
-    
-    localStorage.setItem('last_room_id', roomId); 
-    localStorage.setItem('last_passcode', passcode);
-    localStorage.setItem('last_secret_key', secretKey);
-    localStorage.setItem('last_expire_at', expireAt);
-
-    linkDisplay.innerHTML = `
-      <div class="sm-link-box" style="text-align: center;">
-        <div class="sm-link-label">Your 6-Digit Passcode:</div>
-        <div style="font-size: 2.5rem; font-weight: bold; color: #0a3d91; letter-spacing: 5px; margin: 15px 0;">
-          ${passcode}
-        </div>
-        <div class="sm-meta">
-          <span>Give this code to your friend</span><br>
-          <span id="countdown" class="sm-countdown"></span>
-        </div>
+  <div id="termsModal" class="sm-modal">
+    <div class="sm-modal-inner">
+      <h4>Terms & Conditions</h4>
+      <div class="sm-terms-scroll" style="height: 150px; overflow-y: scroll; border: 1px solid #eee; padding: 10px; font-size: 0.8rem;">
+        <p>By using SMessage, you agree to these Terms. All messages are temporary and deleted upon expiration.</p>
       </div>
-    `;
+      <div class="sm-terms-check" style="margin-top: 15px;">
+        <input type="checkbox" id="acceptTermsCheckbox">
+        <label for="acceptTermsCheckbox">I agree to the Terms.</label>
+      </div>
+      <button id="agreeAndContinueBtn" class="sm-btn" disabled style="width: 100%; margin-top: 10px;">Agree and Continue</button>
+    </div>
+  </div>
 
-    let countdown = 25;
-    const countdownEl = document.getElementById('countdown');
-    const t = setInterval(() => {
-      countdown--;
-      if (countdownEl) countdownEl.textContent = ` • Redirecting to chat in ${countdown}s`;
-      if (countdown <= 0) {
-        clearInterval(t);
-        window.location.href = `join.html?room=${roomId}&p=${passcode}&key=${secretKey}&expireAt=${expireAt}`;
+  <div id="pricingModal" class="sm-modal">
+    <div class="sm-modal-inner" style="text-align: center;">
+      <h3>✨ SMessage Pro</h3>
+      <p>Ad-free features coming soon!</p>
+      <button id="closePricingBtn" class="sm-btn" style="width: 100%; margin-top: 15px;">Great!</button>
+    </div>
+  </div>
+
+  <script>
+    if (window.Android) window.Android.setBannerVisible(true);
+    window.addEventListener("load", () => {
+      
+      // IAP LOGIC
+      const removeAdsBtn = document.getElementById('removeAdsBtn');
+      const pricingModal = document.getElementById('pricingModal');
+      const closePricingBtn = document.getElementById('closePricingBtn');
+      removeAdsBtn.addEventListener('click', () => pricingModal.classList.add('sm-modal-open'));
+      closePricingBtn.addEventListener('click', () => pricingModal.classList.remove('sm-modal-open'));
+
+      // T&C LOGIC
+      const termsModal = document.getElementById('termsModal');
+      const acceptTermsCheckbox = document.getElementById('acceptTermsCheckbox');
+      const agreeBtn = document.getElementById('agreeAndContinueBtn');
+      if (!localStorage.getItem('sm_terms_accepted')) termsModal.classList.add('sm-modal-open');
+      if (acceptTermsCheckbox) {
+        acceptTermsCheckbox.addEventListener('change', () => { agreeBtn.disabled = !acceptTermsCheckbox.checked; agreeBtn.style.opacity = acceptTermsCheckbox.checked ? 1 : 0.5; });
       }
-    }, 1000);
-  });
-
-  // --- JOIN MODAL LOGIC ---
-  const joinBtnOpen = document.getElementById('openJoinWindowBtn');
-  const joinRoomPopup = document.getElementById('joinRoomPopup');
-  const joinSubmit = document.getElementById('joinRoomSubmit');
-  const joinInput = document.getElementById('joinRoomInput');
-  const closeJoinPopup = document.getElementById('closeJoinPopup');
-
-  joinBtnOpen.addEventListener('click', () => {
-    joinRoomPopup.classList.add('sm-modal-open');
-    setTimeout(() => joinInput.focus(), 50); 
-  });
-
-  closeJoinPopup.addEventListener('click', () => {
-    joinRoomPopup.classList.remove('sm-modal-open');
-  });
-
-  joinSubmit.addEventListener('click', () => {
-    const passcode = joinInput.value.trim();
-    if (passcode.length !== 6) return alert('Please enter a 6-digit passcode');
-    joinSubmit.disabled = true;
-    joinSubmit.textContent = "Connecting...";
-    socket.emit('joinRoom', { passcode: passcode });
-  });
-
-  socket.on('joinSuccess', ({ roomId, passcode, expireAt }) => {
-      window.location.href = `join.html?room=${roomId}&p=${passcode}&expireAt=${expireAt}`;
-  });
-
-  socket.on('systemMessage', (msg) => {
-      if (msg.includes("Invalid") || msg.includes("expired") || msg.includes("full")) {
-          alert(msg);
-          joinSubmit.disabled = false;
-          joinSubmit.textContent = "Connect";
+      if (agreeBtn) {
+        agreeBtn.addEventListener('click', () => { localStorage.setItem('sm_terms_accepted', 'true'); termsModal.classList.remove('sm-modal-open'); });
       }
-  });
 
-  // --- T&C LOGIC ---
-  const termsModal = document.getElementById('termsModal');
-  const acceptTermsCheckbox = document.getElementById('acceptTermsCheckbox');
-  const agreeAndContinueBtn = document.getElementById('agreeAndContinueBtn');
-
-  if (!localStorage.getItem('sm_terms_accepted')) {
-      termsModal.classList.add('sm-modal-open');
-  }
-
-  acceptTermsCheckbox.addEventListener('change', () => {
-      agreeAndContinueBtn.disabled = !acceptTermsCheckbox.checked;
-      agreeAndContinueBtn.style.opacity = acceptTermsCheckbox.checked ? 1 : 0.5;
-  });
-
-  agreeAndContinueBtn.addEventListener('click', () => {
-      localStorage.setItem('sm_terms_accepted', 'true');
-      termsModal.classList.remove('sm-modal-open');
-  });
-});
-</script>
+      // Carousel scroll sync for dots
+      const carousel = document.querySelector('.sm-hero-carousel');
+      const dots = document.querySelectorAll('.sm-carousel-dots .dot');
+      if(carousel && dots.length > 0) {
+        carousel.addEventListener('scroll', () => {
+          const index = Math.round(carousel.scrollLeft / carousel.offsetWidth);
+          dots.forEach((dot, i) => {
+            dot.classList.toggle('active', i === index);
+          });
+        });
+      }
+    });
+  </script>
 </body>
 </html>
