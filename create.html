@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta name="theme-color" content="#0a3d91">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+  <title>Create Room - SMessage</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body class="sm-page-bg modern-ui">
+
+  <header class="sm-main-header">
+    <div class="sm-brand">
+      <img src="SMessage.png" alt="SMessage Logo" class="sm-app-icon-mini">
+      <div>
+        <h1 class="sm-title">SMessage</h1>
+        <p class="sm-tagline">Create New Room</p>
+      </div>
+    </div>
+  </header>
+
+  <main class="sm-content-scroll" style="padding: 20px;">
+    
+    <section class="sm-hero-card glassy-hero" style="min-height: auto; flex-direction: column; text-align: center; margin-top: 20px;">
+      <h2 style="font-size: 1.5rem; margin-bottom: 20px; color: #1A2D53;">Select Room Capacity</h2>
+      
+      <div class="sm-home-capacity-box">
+          <div class="sm-segmented-control">
+            <input type="radio" name="roomSize" value="2" id="size2" checked>
+            <label for="size2">2P (Friends)</label>
+            <input type="radio" name="roomSize" value="4" id="size4">
+            <label for="size4">4P (Group)</label>
+            <input type="radio" name="roomSize" value="6" id="size6">
+            <label for="size6">6P (Community)</label>
+            <div class="sm-slider"></div>
+          </div>
+      </div>
+      
+      <button id="createRoomActionBtn" class="sm-btn sm-btn-primary" style="margin-top: 30px; width: 100%; padding: 15px; font-size: 1.1rem; border-radius: 30px; background: #2C64E3; box-shadow: 0 10px 20px rgba(44,100,227,0.3);">Create Room</button>
+    </section>
+
+    <div id="linkDisplay" class="sm-link-display-area" aria-live="polite"></div>
+
+  </main>
+
+  <nav class="sm-bottom-nav">
+    <a href="index.html" class="nav-item" style="text-decoration:none;">
+      <span class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="#8C99B2" xmlns="http://www.w3.org/2000/svg"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg></span>
+      <span>Home</span>
+    </a>
+    <a href="create.html" class="nav-item active" style="text-decoration:none;">
+      <span class="icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2C64E3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg></span>
+      <span style="color:#2C64E3;">Create</span>
+    </a>
+    <a href="join-room.html" class="nav-item" style="text-decoration:none;">
+      <span class="icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#8C99B2" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg></span>
+      <span>Join</span>
+    </a>
+  </nav>
+
+  <script src="crypto-js/crypto-js.js"></script>
+  <script src="https://blinkchat-i72t.onrender.com/socket.io/socket.io.js"></script>
+  <script>
+    if (window.Android) window.Android.setBannerVisible(true);
+    window.addEventListener("load", () => {
+      const socket = io("https://blinkchat-i72t.onrender.com", { transports: ["websocket", "polling"] });
+      
+      const createBtn = document.getElementById('createRoomActionBtn');
+      const linkDisplay = document.getElementById('linkDisplay');
+      
+      createBtn.addEventListener('click', () => {
+        if (window.Android) window.Android.showAd();
+        const selectedSize = document.querySelector('input[name="roomSize"]:checked').value;
+        createBtn.disabled = true;
+        createBtn.textContent = 'Creating...';
+        socket.emit('createRoom', { capacity: parseInt(selectedSize) }); 
+      });
+
+      socket.on('roomCreated', ({ passcode, roomId, expireAt }) => {
+        createBtn.disabled = false;
+        createBtn.textContent = 'Room Created';
+        const secretKey = CryptoJS.SHA256(passcode).toString();
+        localStorage.setItem('last_room_id', roomId); 
+        localStorage.setItem('last_passcode', passcode);
+        localStorage.setItem('last_secret_key', secretKey);
+        localStorage.setItem('last_expire_at', expireAt);
+        
+        linkDisplay.innerHTML = `<div class="sm-hero-card glassy-card" style="margin-top:20px; text-align:center; padding: 20px;">
+          <p style="color:#5B6B8A; margin-bottom:5px;">Room Passcode</p>
+          <h1 style="font-size: 2.5rem; color:#2C64E3; letter-spacing: 5px; margin: 10px 0;">${passcode}</h1>
+          <p id="countdown" style="font-size:0.9rem; color:#d35400; font-weight:600;"></p>
+        </div>`;
+        
+        let count = 25;
+        const countText = document.getElementById('countdown');
+        countText.textContent = `Redirecting in ${count}s...`;
+        
+        const t = setInterval(() => {
+          count--;
+          if (countText) countText.textContent = `Redirecting in ${count}s...`;
+          if (count <= 0) { 
+            clearInterval(t); 
+            window.location.href = `join.html?room=${roomId}&p=${passcode}&key=${secretKey}&expireAt=${expireAt}`; 
+          }
+        }, 1000);
+      });
+    });
+  </script>
+</body>
+</html>
