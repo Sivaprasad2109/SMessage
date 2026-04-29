@@ -789,7 +789,7 @@ html, body {
     border-radius: 50%;
     transition: 0.3s;
 }
-.nav-item.active { color: #ffffff; font-weight: 600; }
+.nav-item.active { color: #000000; font-weight: 600; }
 .nav-item.active .icon {
     background: rgba(255, 255, 255, 0.3);
     color: #ffffff;
