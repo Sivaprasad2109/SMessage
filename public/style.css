@@ -754,7 +754,7 @@ html, body {
     bottom: 15px;
     left: 15px;
     right: 15px;
-    background: rgba(255, 255, 255, 0.2);
+    background: #1a407d00;
     backdrop-filter: blur(25px);
     -webkit-backdrop-filter: blur(25px);
     border: 1px solid rgba(255, 255, 255, 0.8);
