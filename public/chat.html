@@ -132,6 +132,10 @@ input.addEventListener("keydown", (e) => {
         if (statusEl) statusEl.textContent = "✔✔"; // Double tick for seen
     });
 
+    socket.on("systemMessage", (msg) => {
+        addMessage("", msg, "center", "sys_" + Date.now());
+    });
+
     function sendMessage() {
         const msg = input.value.trim();
         if (!msg || !secretKey || !socket.connected) return;
