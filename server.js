@@ -57,7 +57,7 @@ const broadcastPresence = (rId) => {
   socket.on("createRoom", (data) => {
     const passcode = generateUniquePasscode();
     const roomId = crypto.randomBytes(16).toString("hex");
-    const expiresIn = 15 * 60 * 1000; 
+    const expiresIn = 31 * 60 * 1000; 
     const expireAt = Date.now() + expiresIn;
 
     // Capture capacity from data, default to 2 if not provided
