@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SMessage Chat</title><link rel="stylesheet" href="style.css" />
-  <script src="https://blinkchat-i72t.onrender.com/socket.io/socket.io.js"></script>
+  <script src="/socket.io/socket.io.js"></script>
   <script src="crypto-js/crypto-js.js"></script>
 </head>
 <body class="sm-page-bg">
-  <main class="sm-chat-wrap">
+  <main class="sm-chat-wrap sm-page-entrance">
     <header class="sm-chat-header">
   <div class="sm-header-info">
     <div class="sm-chat-title" style="font-weight: 600;">Private Room</div>
@@ -42,7 +42,14 @@
 <script>
 if (window.Android) window.Android.setBannerVisible(false);
 (() => {
-    const socket = io("https://blinkchat-i72t.onrender.com", { transports: ["websocket", "polling"], reconnection: true });
+    // Apply selected premium theme if unlocked and set
+    const selectedTheme = localStorage.getItem("sm_selected_theme") || "default";
+    if (selectedTheme !== "default") {
+        document.body.style.background = `url('theme_${selectedTheme}.png') no-repeat center center fixed`;
+        document.body.style.backgroundSize = "cover";
+    }
+
+    const socket = io(window.location.origin, { transports: ["websocket", "polling"], reconnection: true });
     const params = new URLSearchParams(window.location.search);
     
     let roomId = params.get("room") || localStorage.getItem("last_room_id");
@@ -156,20 +163,30 @@ input.addEventListener("keydown", (e) => {
         socket.emit("stopTyping");
     }
 
+    function escapeHTML(str) {
+        if (!str) return '';
+        return String(str)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+
     // --- 3. DRAG TO REPLY LOGIC ---
     function addMessage(name, text, side, msgId, replyData = null) {
         const div = document.createElement("div");
         div.className = `sm-msg ${side}`;
         div.setAttribute("data-id", msgId);
         
-        let replyHtml = replyData ? `<div class="sm-reply-preview">Replying to: ${replyData}</div>` : "";
+        let replyHtml = replyData ? `<div class="sm-reply-preview">Replying to: ${escapeHTML(replyData)}</div>` : "";
         // Inside addMessage function...
         let statusHtml = side === "right" ? `<span class="sm-status">✔</span>` : "";
 
         div.innerHTML = `
             ${replyHtml}
-            <div style="font-size:0.7rem;">${name}</div>
-            <div>${text} ${statusHtml}</div>
+            <div style="font-size:0.7rem;">${escapeHTML(name)}</div>
+            <div>${escapeHTML(text)} ${statusHtml}</div>
         `;
 
         // Touch handling for drag-to-reply
@@ -243,7 +260,8 @@ input.addEventListener("keydown", (e) => {
         // Remove the alert after 5 seconds
         setTimeout(() => {
             alertDiv.style.opacity = '0';
-            setTimeout(() => alertDiv.remove(), 500);
+            alertDiv.style.transform = 'translate3d(-50%, -120px, 0) scale(0.9)';
+            setTimeout(() => alertDiv.remove(), 400);
         }, 5000);
     }
 
@@ -272,10 +290,21 @@ input.addEventListener("keydown", (e) => {
     });
 
     socket.on("showTyping", ({ from }) => {
-        document.getElementById("typingIndicator").style.display = "block";
-        document.getElementById("typingIndicator").textContent = `${from} is typing...`;
+        const indicator = document.getElementById("typingIndicator");
+        indicator.innerHTML = `${from} is typing<div class="sm-typing-dots"><span></span><span></span><span></span></div>`;
+        indicator.style.display = "flex";
+        void indicator.offsetWidth; // Trigger reflow for transition
+        indicator.style.opacity = "1";
     });
-    socket.on("hideTyping", () => document.getElementById("typingIndicator").style.display = "none");
+    socket.on("hideTyping", () => {
+        const indicator = document.getElementById("typingIndicator");
+        indicator.style.opacity = "0";
+        setTimeout(() => {
+            if (indicator.style.opacity === "0") {
+                indicator.style.display = "none";
+            }
+        }, 250);
+    });
 
 })(); // Close the IIFE
 </script>

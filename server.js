@@ -92,14 +92,14 @@ const broadcastPresence = (rId) => {
     }
     
     if (!roomData) {
-      socket.emit("systemMessage", "Invalid or expired passcode.");
+      socket.emit("error", { message: "Invalid or expired passcode." });
       return;
     }
 
     // Use roomData.maxCapacity instead of a hardcoded 2
     const currentRoom = io.sockets.adapter.rooms.get(roomData.roomId);
     if (currentRoom && currentRoom.size >= roomData.maxCapacity) {
-      socket.emit("systemMessage", `Room is full! Limit is ${roomData.maxCapacity} persons.`);
+      socket.emit("error", { message: `Room is full! Limit is ${roomData.maxCapacity} persons.` });
       return;
     }
 
@@ -124,6 +124,26 @@ const broadcastPresence = (rId) => {
   socket.on("sendMessage", ({ message, msgId, replyTo }) => {
     if (!socket.roomId) return; 
 
+    // Rate Limiting Check
+    const now = Date.now();
+    socket.lastMessageTime = socket.lastMessageTime || 0;
+    socket.messageBucket = socket.messageBucket || 0;
+
+    if (now - socket.lastMessageTime < 1000) {
+      socket.messageBucket++;
+      if (socket.messageBucket > 4) {
+        socket.emit("systemMessage", "⚠️ Slow down! You are sending messages too fast.");
+        return;
+      }
+    } else {
+      socket.messageBucket = 0;
+    }
+    socket.lastMessageTime = now;
+
+    // Input Validation Checks
+    if (typeof message !== "string" || message.length > 10000) return;
+    if (replyTo && (typeof replyTo !== "string" || replyTo.length > 1000)) return;
+
     // NEW: We now include 'msgId' and 'replyTo' in the emission
     socket.to(socket.roomId).emit("newMessage", { 
         message, 
@@ -131,7 +151,7 @@ const broadcastPresence = (rId) => {
         msgId: msgId,   // This allows the receiver to "mark as seen"
         replyTo: replyTo // This shows the "Replying to..." text
     });
-});
+  });
 
 // ADD THIS NEW LISTENER BELOW IT:
 socket.on("messageSeen", ({ roomId, msgId }) => {

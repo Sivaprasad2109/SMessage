@@ -5,7 +5,7 @@
   <title>Join Room</title><link rel="stylesheet" href="style.css" />
 </head>
 <body class="sm-page-bg">
-  <main class="sm-center-wrap">
+  <main class="sm-center-wrap sm-page-entrance">
     <section class="sm-app-card">
       <p class="sm-subtitle">Choose your avatar:</p>
       <div class="sm-avatar-grid" id="avatarSelector">
@@ -32,6 +32,13 @@
   <script src="crypto-js/crypto-js.js"></script>
 <script>
 (() => {
+    // Apply selected premium theme if unlocked and set
+    const selectedTheme = localStorage.getItem("sm_selected_theme") || "default";
+    if (selectedTheme !== "default") {
+        document.body.style.background = `url('theme_${selectedTheme}.png') no-repeat center center fixed`;
+        document.body.style.backgroundSize = "cover";
+    }
+
     const params = new URLSearchParams(window.location.search);
     let roomId = params.get("room") || localStorage.getItem("last_room_id");
     let passcode = params.get("p") || localStorage.getItem("last_passcode");

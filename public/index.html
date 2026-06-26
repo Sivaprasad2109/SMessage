@@ -1,15 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta name="theme-color" content="#0a3d91">
+  <meta name="theme-color" content="#0d2550">
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
-  <title>SMessage</title>
+  <title>SMessage - Secure. Private. Temporary.</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
 </head>
 
-<body class="sm-page-bg modern-ui">
+<body class="sm-page-bg modern-ui sm-page-entrance">
+
+  <div class="sm-aurora-blob blob-1"></div>
+  <div class="sm-aurora-blob blob-2"></div>
 
   <header class="sm-main-header">
     <div class="sm-brand">
@@ -19,133 +22,226 @@
         <p class="sm-tagline">Secure. Private. Temporary.</p>
       </div>
     </div>
-    <button id="removeAdsBtn" class="sm-premium-pill">
-      <span><svg width="16" height="16" viewBox="0 0 24 24" fill="#FFB000" xmlns="http://www.w3.org/2000/svg" style="vertical-align: middle; margin-right: 4px; margin-top: -2px;"><path d="M2.5 19h19v2h-19v-2zm1.5-12.5l4 3.5 4-6 4 6 4-3.5v9h-16v-9z"/></svg></span>Go Ad-Free
+    <button id="removeAdsBtn" class="sm-premium-pill-mockup">
+      <span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="#FFB000" xmlns="http://www.w3.org/2000/svg" style="vertical-align: middle;">
+          <path d="M2.5 19h19v2h-19v-2zm1.5-12.5l4 3.5 4-6 4 6 4-3.5v9h-16v-9z"/>
+        </svg>
+      </span>
+      Go Ad-Free
     </button>
   </header>
 
   <main class="sm-content-scroll">
-    <section class="sm-hero-carousel">
-      <div class="sm-hero-card glassy-hero">
-        <div class="hero-content">
-          <span class="sm-step-indicator glassy-pill">01 / 03</span>
-          <h2>Messaging<br>made <span>private</span></h2>
-          <p>End-to-end encrypted<br>temporary chat rooms.</p>
-          <div class="sm-badge-secure"><span class="check-icon">✔</span> 100% Secure</div>
-        </div>
-        <div class="hero-image-wrapper" style="display: flex; align-items: center; justify-content: center;">
-          <div style="font-size: 100px; opacity: 0.5;">🔒</div>
-        </div>
+    
+    <!-- Themes Streak Card -->
+    <div class="sm-streak-card">
+      <div class="sm-streak-flame">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2C10.5 5.5 8.5 7.5 8.5 10.5C8.5 13.5 10 15 12 15C14 15 15.5 13.5 15.5 10.5C15.5 7.5 13.5 5.5 12 2Z" fill="#90caf9"/>
+          <path d="M12 6C11.1 8.5 9.7 10 9.7 12.2C9.7 14.4 10.7 15.5 12 15.5C13.3 15.5 14.3 14.4 14.3 12.2C14.3 10 12.9 8.5 12 6Z" fill="#1e88e5"/>
+          <path d="M12 9.5C11.5 11 10.7 12 10.7 13.2C10.7 14.5 11.2 15.2 12 15.2C12.8 15.2 13.3 14.5 13.3 13.2C13.3 12 12.5 11 12 9.5Z" fill="#e3f2fd"/>
+        </svg>
       </div>
-      <div class="sm-hero-card glassy-hero" style="background: linear-gradient(135deg, rgba(240, 235, 255, 0.9), rgba(225, 215, 255, 0.7));">
-        <div class="hero-content">
-          <span class="sm-step-indicator glassy-pill">02 / 03</span>
-          <h2 style="color: #6a1b9a;">Coming<br><span style="color: #8e24aa;">Soon</span></h2>
-          <div style="font-size: 0.85rem; color: #5B6B8A; line-height: 1.5; margin-bottom: 12px; font-weight: 500;">
-            <div style="margin-bottom: 4px;">🎙️ Voice Messages</div>
-            <div style="margin-bottom: 4px;">👥 Group Chats</div>
-            <div>📁 File Sharing</div>
+      <div class="sm-streak-info">
+        <span class="sm-streak-title">Maintain streak to unlock</span>
+        <span class="sm-streak-subtitle">Themes</span>
+        <div class="sm-streak-progress-container">
+          <div class="sm-streak-progress-bar">
+            <div id="streakProgressFill" class="sm-streak-progress-fill" style="width: 0%;"></div>
           </div>
-          <div class="sm-badge-secure" style="color:#6a1b9a;"><span class="check-icon" style="background:#6a1b9a;">🚀</span> In Development</div>
-        </div>
-        <div class="hero-image-wrapper" style="display: flex; align-items: center; justify-content: center;">
-          <div style="font-size: 100px; opacity: 0.4;">✨</div>
+          <span id="streakDaysLabel" class="sm-streak-count">1 / 14</span>
         </div>
       </div>
-      <div class="sm-hero-card glassy-hero" style="background: linear-gradient(135deg, rgba(235, 245, 255, 0.9), rgba(255, 235, 245, 0.7));">
-        <div class="hero-content">
-          <span class="sm-step-indicator glassy-pill">03 / 03</span>
-          <h2 style="color: #0277bd;">Let's<br><span style="color: #c2185b;">Connect</span></h2>
-          <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px;">
-            <a href="https://x.com/SMessage2109" target="_blank" style="text-decoration:none; color: #5B6B8A; font-size: 0.85rem; display:flex; align-items:center; gap:8px; font-weight: 600;">
-               <span style="display:flex; align-items:center; color:#1A2D53;"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></span> @SMessage2109
-            </a>
-            <a href="https://www.instagram.com/smessage_offical_2109/" target="_blank" style="text-decoration:none; color: #5B6B8A; font-size: 0.85rem; display:flex; align-items:center; gap:8px; font-weight: 600;">
-               <span style="display:flex; align-items:center; color:#E1306C;"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg></span> @smessage_offical_2109
-            </a>
-          </div>
-          <div class="sm-badge-secure" style="color:#0277bd;"><span class="check-icon" style="background:#0277bd;">💬</span> Follow Us</div>
-        </div>
-        <div class="hero-image-wrapper" style="display: flex; align-items: center; justify-content: center;">
-          <div style="font-size: 100px; opacity: 0.4;">🌐</div>
-        </div>
+      <div class="sm-streak-lock">
+        <span id="streakLockIcon">🔒</span>
       </div>
-    </section>
-    <div class="sm-carousel-dots" style="margin-bottom: 20px;">
-      <span class="dot active"></span><span class="dot"></span><span class="dot"></span>
     </div>
 
-    <h3 class="sm-section-label">Features</h3>
-    <section class="sm-feature-grid">
-      <div class="sm-f-card glassy-card">
-        <div class="sm-f-icon-wrap blue-grad"><span class="icon">🛡</span></div>
-        <h4>End-to-end Encrypted</h4>
-        <p>Your messages stay private</p>
+    <!-- Action Cards Horizontal Carousel -->
+    <div class="sm-action-carousel-mockup">
+      
+      <!-- Who We Are Card -->
+      <div class="sm-action-card-scrollable create-theme">
+        <div class="sm-card-icon-wrap">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+          </svg>
+        </div>
+        <div class="sm-card-text">
+          <h3>Who We Are</h3>
+          <p>We are a privacy-focused team dedicated to providing completely secure, transient, and anonymous messaging spaces. Your secrets are safe with us.</p>
+        </div>
+        <span class="sm-card-btn" style="background: #2C64E3; color: #ffffff; cursor: default;">Privacy First</span>
       </div>
-      <div class="sm-f-card glassy-card">
-        <div class="sm-f-icon-wrap green-grad"><span class="icon">🕒</span></div>
-        <h4>Auto-delete Chats</h4>
-        <p>Rooms and messages disappear</p>
+
+      <!-- Voice Messages (Upcoming Feature) -->
+      <div class="sm-action-card-scrollable voice-theme">
+        <div class="sm-card-icon-wrap">
+          <span>🎙️</span>
+        </div>
+        <div class="sm-card-text">
+          <h3>Voice Messages</h3>
+          <p>Speak freely. End-to-end encrypted voice logs are coming soon.</p>
+        </div>
+        <span class="sm-card-btn">In Development</span>
       </div>
-      <div class="sm-f-card glassy-card">
-        <div class="sm-f-icon-wrap purple-grad"><span class="icon">🎭</span></div>
-        <h4>No Sign-up Required</h4>
+
+      <!-- Secure File Share (Upcoming Feature) -->
+      <div class="sm-action-card-scrollable file-theme">
+        <div class="sm-card-icon-wrap">
+          <span>📁</span>
+        </div>
+        <div class="sm-card-text">
+          <h3>Secure File Share</h3>
+          <p>Drop documents, media, and files securely. Auto-wiping soon.</p>
+        </div>
+        <span class="sm-card-btn">In Development</span>
       </div>
-    </section>
 
+      <!-- Go Pro (Promotional) -->
+      <div class="sm-action-card-scrollable pro-theme" id="proPromoCard" style="cursor: pointer;">
+        <div class="sm-card-icon-wrap" style="background: rgba(255, 255, 255, 0.1); color: #ffd700;">
+          <span>👑</span>
+        </div>
+        <div class="sm-card-text">
+          <h3>Go Ad-Free</h3>
+          <p>Support SMessage development and unlock premium ad-free layouts.</p>
+        </div>
+        <button class="sm-card-btn" id="proPromoBtn">Unlock Pro</button>
+      </div>
 
+    </div>
 
-    <section class="sm-link-list">
-      <div class="sm-list-item glass-action-card full-width">
+    <!-- Links Row (Contact Us & Rate Us) -->
+    <div class="sm-row-links" style="width: calc(100% - 30px); margin: 0 auto 25px auto;">
+      <a href="mailto:smessage2109@gmail.com" class="glass-action-card half" style="text-decoration:none;">
         <div class="action-card-left">
-          <span class="icon-circle border-icon"><span class="icon">🔒</span></span>
-          <p>Passcodes link you to encrypted sessions.<br>No data is stored on our servers.</p>
+          <span class="icon-circle blue-tint"><span class="icon">💬</span></span>
+          <span class="title">Contact Us</span>
         </div>
         <svg class="chevron-icon" width="8" height="13" viewBox="0 0 8 13" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1.5 1.5L6.5 6.5L1.5 11.5" stroke="#1A2D53" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
+      <a href="https://play.google.com/store/apps/details?id=com.smessage.app&hl=en_IN" target="_blank" rel="noopener noreferrer" class="glass-action-card half" style="text-decoration:none;">
+        <div class="action-card-left">
+          <span class="icon-circle blue-tint-dark"><span class="icon">⭐</span></span>
+          <span class="title">Rate Us</span>
+        </div>
+        <svg class="chevron-icon" width="8" height="13" viewBox="0 0 8 13" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1.5 1.5L6.5 6.5L1.5 11.5" stroke="#1A2D53" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
+    </div>
+
+    <!-- Unlock Beautiful Themes Selector -->
+    <div class="sm-themes-panel">
+      <div class="sm-themes-header">
+        <span class="sm-themes-header-icon">✨</span>
+        <div class="sm-themes-title-wrap">
+          <h4>Unlock Beautiful Themes</h4>
+          <p>Maintain your daily streak to collect exclusive chat room themes.</p>
+        </div>
       </div>
-      <div class="sm-row-links">
-        <a href="mailto:smessage2109@gmail.com" class="sm-list-item glass-action-card half">
-          <div class="action-card-left">
-            <span class="icon-circle blue-tint"><span class="icon">💬</span></span>
-            <span class="title">Contact us</span>
-          </div>
-          <svg class="chevron-icon" width="8" height="13" viewBox="0 0 8 13" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1.5 1.5L6.5 6.5L1.5 11.5" stroke="#1A2D53" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </a>
-        <a href="https://play.google.com/store/apps/details?id=com.smessage.app&hl=en_IN" id="rateUsBtn" target="_blank" rel="noopener noreferrer" class="sm-list-item glass-action-card half">
-          <div class="action-card-left">
-            <span class="icon-circle blue-tint-dark"><span class="icon">⭐</span></span>
-            <span class="title">Rate us</span>
-          </div>
-          <svg class="chevron-icon" width="8" height="13" viewBox="0 0 8 13" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1.5 1.5L6.5 6.5L1.5 11.5" stroke="#1A2D53" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </a>
+      <div class="sm-themes-carousel" id="themesCarousel">
+        <!-- Default Theme (Unlocked) -->
+        <div class="sm-theme-card-mockup selected" data-theme="default">
+          <div style="width: 100%; height: 100%; background: linear-gradient(135deg, #0a3d91, #1e62d0);"></div>
+          <div class="sm-theme-overlay-mockup"></div>
+          <div class="sm-theme-label-mockup">Default</div>
+        </div>
+        
+        <!-- Ocean Theme (Requires 3 days) -->
+        <div class="sm-theme-card-mockup locked" data-theme="ocean" data-streak-required="3">
+          <img src="theme_ocean.png" alt="Ocean Theme">
+          <div class="sm-theme-overlay-mockup"></div>
+          <div class="sm-theme-label-mockup">Ocean</div>
+        </div>
+        
+        <!-- Galaxy Theme (Requires 7 days) -->
+        <div class="sm-theme-card-mockup locked" data-theme="galaxy" data-streak-required="7">
+          <img src="theme_galaxy.png" alt="Galaxy Theme">
+          <div class="sm-theme-overlay-mockup"></div>
+          <div class="sm-theme-label-mockup">Galaxy</div>
+        </div>
+        
+        <!-- Aurora Theme (Requires 10 days) -->
+        <div class="sm-theme-card-mockup locked" data-theme="aurora" data-streak-required="10">
+          <img src="theme_aurora.png" alt="Aurora Theme">
+          <div class="sm-theme-overlay-mockup"></div>
+          <div class="sm-theme-label-mockup">Aurora</div>
+        </div>
+        
+        <!-- Fire Theme (Requires 14 days) -->
+        <div class="sm-theme-card-mockup locked" data-theme="fire" data-streak-required="14">
+          <img src="theme_fire.png" alt="Fire Theme">
+          <div class="sm-theme-overlay-mockup"></div>
+          <div class="sm-theme-label-mockup">Fire</div>
+        </div>
       </div>
-      <!--
-      <div class="sm-footer-legal">
-        <a href="privacy.html">Privacy Policy</a> • <a href="terms.html">Terms of Service</a>
-      </div>
-      -->
-    </section>
+    </div>
+
   </main>
 
-  <nav class="sm-bottom-nav">
+  <nav class="sm-bottom-nav modern-nav">
     <a href="index.html" class="nav-item active" style="text-decoration:none;">
-      <span class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="#2C64E3" xmlns="http://www.w3.org/2000/svg"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg></span>
+      <span class="icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+          <polyline points="9 22 9 12 15 12 15 22"></polyline>
+        </svg>
+      </span>
       <span>Home</span>
     </a>
+    
     <a href="create.html" class="nav-item" style="text-decoration:none;">
-      <span class="icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#8C99B2" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg></span>
+      <span class="icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="16"></line>
+          <line x1="8" y1="12" x2="16" y2="12"></line>
+        </svg>
+      </span>
       <span>Create</span>
     </a>
+    
+    <a href="join-room.html" class="nav-item chats-floating" style="text-decoration:none;">
+      <div class="sm-chats-floating-btn">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+        </svg>
+      </div>
+      <span style="display:none;">Chats</span>
+    </a>
+    
     <a href="join-room.html" class="nav-item" style="text-decoration:none;">
-      <span class="icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#8C99B2" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg></span>
-      <span>Join</span>
+      <span class="icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+          <circle cx="9" cy="7" r="4"></circle>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+        </svg>
+      </span>
+      <span>Rooms</span>
+    </a>
+    
+    <a href="#" class="nav-item" id="navProfileBtn" style="text-decoration:none;">
+      <span class="icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+      </span>
+      <span>Profile</span>
     </a>
   </nav>
 
+  <!-- Modals -->
   <div id="termsModal" class="sm-modal">
     <div class="sm-modal-inner">
       <h4>Terms & Conditions</h4>
-      <div class="sm-terms-scroll" style="height: 150px; overflow-y: scroll; border: 1px solid #eee; padding: 10px; font-size: 0.8rem;">
+      <div class="sm-terms-scroll" style="height: 150px; overflow-y: scroll; border: 1px solid #eee; padding: 10px; font-size: 0.8rem; margin: 12px 0;">
         <p>By using SMessage, you agree to these Terms. All messages are temporary and deleted upon expiration.</p>
       </div>
       <div class="sm-terms-check" style="margin-top: 15px;">
@@ -159,7 +255,7 @@
   <div id="pricingModal" class="sm-modal">
     <div class="sm-modal-inner" style="text-align: center;">
       <h3>✨ SMessage Pro</h3>
-      <p>Ad-free features coming soon!</p>
+      <p style="color:#5B6B8A; margin-top: 10px;">Ad-free features coming soon!</p>
       <button id="closePricingBtn" class="sm-btn" style="width: 100%; margin-top: 15px;">Great!</button>
     </div>
   </div>
@@ -172,7 +268,17 @@
       const removeAdsBtn = document.getElementById('removeAdsBtn');
       const pricingModal = document.getElementById('pricingModal');
       const closePricingBtn = document.getElementById('closePricingBtn');
-      removeAdsBtn.addEventListener('click', () => pricingModal.classList.add('sm-modal-open'));
+      const proPromoCard = document.getElementById('proPromoCard');
+      const proPromoBtn = document.getElementById('proPromoBtn');
+
+      const openPricing = () => pricingModal.classList.add('sm-modal-open');
+
+      removeAdsBtn.addEventListener('click', openPricing);
+      if (proPromoCard) proPromoCard.addEventListener('click', openPricing);
+      if (proPromoBtn) proPromoBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        openPricing();
+      });
       closePricingBtn.addEventListener('click', () => pricingModal.classList.remove('sm-modal-open'));
 
       // T&C LOGIC
@@ -181,24 +287,116 @@
       const agreeBtn = document.getElementById('agreeAndContinueBtn');
       if (!localStorage.getItem('sm_terms_accepted')) termsModal.classList.add('sm-modal-open');
       if (acceptTermsCheckbox) {
-        acceptTermsCheckbox.addEventListener('change', () => { agreeBtn.disabled = !acceptTermsCheckbox.checked; agreeBtn.style.opacity = acceptTermsCheckbox.checked ? 1 : 0.5; });
-      }
-      if (agreeBtn) {
-        agreeBtn.addEventListener('click', () => { localStorage.setItem('sm_terms_accepted', 'true'); termsModal.classList.remove('sm-modal-open'); });
-      }
-
-      // Carousel scroll sync for dots
-      const carousel = document.querySelector('.sm-hero-carousel');
-      const dots = document.querySelectorAll('.sm-carousel-dots .dot');
-      if(carousel && dots.length > 0) {
-        carousel.addEventListener('scroll', () => {
-          const index = Math.round(carousel.scrollLeft / carousel.offsetWidth);
-          dots.forEach((dot, i) => {
-            dot.classList.toggle('active', i === index);
-          });
+        acceptTermsCheckbox.addEventListener('change', () => { 
+          agreeBtn.disabled = !acceptTermsCheckbox.checked; 
+          agreeBtn.style.opacity = acceptTermsCheckbox.checked ? 1 : 0.5; 
         });
       }
+      if (agreeBtn) {
+        agreeBtn.addEventListener('click', () => { 
+          localStorage.setItem('sm_terms_accepted', 'true'); 
+          termsModal.classList.remove('sm-modal-open'); 
+        });
+      }
+
+      // STREAK & LOCAL THEME SYSTEM
+      initStreakSystem();
     });
+
+    function initStreakSystem() {
+      // 1. Generate/Retrieve local UserID
+      let userId = localStorage.getItem("sm_user_id");
+      if (!userId) {
+        userId = "usr_" + Math.random().toString(36).substring(2, 15);
+        localStorage.setItem("sm_user_id", userId);
+      }
+
+      // 2. Track Streaks
+      let today = new Date().toDateString();
+      let lastActive = localStorage.getItem("sm_last_active");
+      let streak = Number(localStorage.getItem("sm_streak")) || 0;
+
+      if (!lastActive) {
+        streak = 1;
+        localStorage.setItem("sm_streak", "1");
+        localStorage.setItem("sm_last_active", today);
+      } else {
+        let lastDate = new Date(lastActive);
+        let currentDate = new Date(today);
+        let diffTime = Math.abs(currentDate - lastDate);
+        let diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        if (diffDays === 1) {
+          streak++;
+          localStorage.setItem("sm_streak", String(streak));
+          localStorage.setItem("sm_last_active", today);
+        } else if (diffDays > 1) {
+          // Missed a day
+          streak = 1;
+          localStorage.setItem("sm_streak", "1");
+          localStorage.setItem("sm_last_active", today);
+        }
+      }
+
+      // 3. Update UI Progress Bar (Goal: 14 days)
+      const streakProgressFill = document.getElementById("streakProgressFill");
+      const streakDaysLabel = document.getElementById("streakDaysLabel");
+      const streakLockIcon = document.getElementById("streakLockIcon");
+      
+      let nextGoal = 14;
+      let percent = Math.min((streak / nextGoal) * 100, 100);
+      streakProgressFill.style.width = percent + "%";
+      streakDaysLabel.textContent = `${streak} / ${nextGoal}`;
+      
+      if (streak >= nextGoal) {
+        streakLockIcon.textContent = "🔓";
+      } else {
+        streakLockIcon.textContent = "🔒";
+      }
+
+      // 4. Update Theme Cards Lock/Selected states
+      const themeCards = document.querySelectorAll(".sm-theme-card-mockup");
+      let activeTheme = localStorage.getItem("sm_selected_theme") || "default";
+
+      themeCards.forEach(card => {
+        let themeName = card.getAttribute("data-theme");
+        let requiredStreak = Number(card.getAttribute("data-streak-required")) || 0;
+
+        if (themeName !== "default") {
+          if (streak >= requiredStreak) {
+            card.classList.remove("locked");
+          } else {
+            card.classList.add("locked");
+          }
+        }
+
+        // Selected state
+        if (themeName === activeTheme) {
+          card.classList.add("selected");
+        } else {
+          card.classList.remove("selected");
+        }
+
+        // Card Selection Handler
+        card.addEventListener("click", () => {
+          if (card.classList.contains("locked")) {
+            alert(`🔥 Keep up your streak! This theme requires a ${requiredStreak}-day streak to unlock.`);
+            return;
+          }
+
+          themeCards.forEach(c => c.classList.remove("selected"));
+          card.classList.add("selected");
+          localStorage.setItem("sm_selected_theme", themeName);
+        });
+      });
+      
+      // Profile Tab Action
+      const profileBtn = document.getElementById("navProfileBtn");
+      profileBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        alert(`👤 SMessage Profile\n\nAnonymous UserID:\n${userId}\n\nActive Streak: ${streak} Days\n\nMaintain your daily streak to unlock premium chat backgrounds!`);
+      });
+    }
   </script>
 </body>
 </html>
