@@ -1733,3 +1733,85 @@ html, body {
     border-color: #2C64E3 !important;
     box-shadow: 0 0 15px rgba(44, 100, 227, 0.4);
 }
+
+/* --- BURN AFTER READING STYLES --- */
+.sm-burn-toggle {
+    background: rgba(255, 255, 255, 0.08);
+    color: #8fa3c0;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 1.2rem;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    flex-shrink: 0;
+}
+.sm-burn-toggle:hover {
+    transform: scale(1.08);
+    background: rgba(255, 255, 255, 0.15);
+    color: #ffffff;
+}
+.sm-burn-toggle:active {
+    transform: scale(0.92);
+}
+.sm-burn-toggle.active {
+    background: rgba(255, 87, 34, 0.2) !important;
+    color: #ff5722 !important;
+    border-color: #ff5722 !important;
+    box-shadow: 0 0 12px rgba(255, 87, 34, 0.5);
+    animation: flamePulse 1.5s infinite alternate ease-in-out;
+}
+@keyframes flamePulse {
+    0% { transform: scale(1); box-shadow: 0 0 8px rgba(255, 87, 34, 0.4); }
+    100% { transform: scale(1.08); box-shadow: 0 0 16px rgba(255, 87, 34, 0.7); }
+}
+
+.sm-msg.burn {
+    border: 1.5px dashed rgba(255, 87, 34, 0.6) !important;
+    box-shadow: 0 4px 15px rgba(255, 87, 34, 0.25);
+}
+.sm-msg.burn.left {
+    background: rgba(255, 87, 34, 0.12) !important;
+    color: #ff8a65 !important;
+}
+.sm-msg.burn.left div {
+    color: #ff8a65 !important;
+}
+.sm-msg.burn.right {
+    background: rgba(255, 87, 34, 0.25) !important;
+    color: #ffffff !important;
+}
+
+.sm-burn-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 5px;
+    color: #ff5722;
+    background: rgba(255, 87, 34, 0.15);
+    padding: 2px 6px;
+    border-radius: 4px;
+    width: fit-content;
+}
+.sm-msg.right .sm-burn-badge {
+    color: #ffccbc;
+    background: rgba(255, 255, 255, 0.15);
+}
+
+@keyframes burnPuff {
+    0% { opacity: 1; transform: scale(1) translateY(0); filter: blur(0); }
+    50% { opacity: 0.5; transform: scale(1.05) translateY(-5px); filter: blur(3px); }
+    100% { opacity: 0; transform: scale(0.85) translateY(-15px); filter: blur(10px); }
+}
+.sm-msg-burn-active {
+    animation: burnPuff 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards !important;
+    pointer-events: none;
+}

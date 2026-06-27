@@ -34,6 +34,7 @@
       <div id="messages" class="sm-messages"></div>
       <div id="typingIndicator" style="display:none; text-align:center;">Friend is typing...</div>
       <div class="sm-input-row">
+        <button id="burnToggleBtn" class="sm-burn-toggle" title="Toggle Burn After Reading">🔥</button>
         <textarea id="messageInput" class="sm-message-input" placeholder="Type..." rows="1"></textarea>
         <button id="sendBtn" class="sm-send-btn">Send</button>
       </div>
@@ -63,29 +64,45 @@ if (window.Android) window.Android.setBannerVisible(false);
     const messagesDiv = document.getElementById("messages");
     const input = document.getElementById("messageInput");
     const sendBtn = document.getElementById("sendBtn");
+    const burnToggleBtn = document.getElementById("burnToggleBtn");
+    
+    let burnMode = false;
+    let replyToMsg = null; // Tracks which message is being replied to
+
+    // Toggle Burn Mode
+    burnToggleBtn.addEventListener("click", () => {
+        burnMode = !burnMode;
+        if (burnMode) {
+            burnToggleBtn.classList.add("active");
+            input.placeholder = "Sending Burn Message (🔥)...";
+        } else {
+            burnToggleBtn.classList.remove("active");
+            input.placeholder = "Type...";
+        }
+    });
+
     // --- KEYBOARD & LAYOUT FIXES ---
 
-// FIX 1: Prevent keyboard from disappearing when clicking 'Send'
-// 'mousedown' happens before 'click' and 'focusout'
-sendBtn.addEventListener("mousedown", (e) => {
-    e.preventDefault(); // Prevents the input from losing focus
-});
+    // FIX 1: Prevent keyboard from disappearing when clicking 'Send'
+    // 'mousedown' happens before 'click' and 'focusout'
+    sendBtn.addEventListener("mousedown", (e) => {
+        e.preventDefault(); // Prevents the input from losing focus
+    });
 
-// FIX 2: Handle Send Button Click (keeping focus)
-sendBtn.addEventListener("click", () => {
-    sendMessage();
-    input.focus(); // Re-focus just in case of a glitch
-});
-
-// FIX 3: Handle 'Enter' key without a new line or losing focus
-input.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-        e.preventDefault(); // Stops the new line (\n)
+    // FIX 2: Handle Send Button Click (keeping focus)
+    sendBtn.addEventListener("click", () => {
         sendMessage();
-        // Focus stays on input, so keyboard stays up
-    }
-});
-    let replyToMsg = null; // Tracks which message is being replied to
+        input.focus(); // Re-focus just in case of a glitch
+    });
+
+    // FIX 3: Handle 'Enter' key without a new line or losing focus
+    input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault(); // Stops the new line (\n)
+            sendMessage();
+            // Focus stays on input, so keyboard stays up
+        }
+    });
 
     document.getElementById("roomIdBox").textContent = `Code: ${passcode}`;
 
@@ -101,33 +118,33 @@ input.addEventListener("keydown", (e) => {
         }
     });
     socket.on("updateParticipants", (participants) => {
-    const presenceBar = document.getElementById("presenceBar");
-    const headerStatus = document.getElementById("headerStatus");
-    
-    presenceBar.innerHTML = "";
-    
-    participants.forEach((user, index) => {
-        const img = document.createElement("img");
-        img.src = user.avatar;
-        img.className = "sm-presence-avatar";
-        img.style.marginLeft = index === 0 ? "0" : "-12px"; 
-        img.style.zIndex = 10 - index;
-        presenceBar.appendChild(img);
+        const presenceBar = document.getElementById("presenceBar");
+        const headerStatus = document.getElementById("headerStatus");
+        
+        presenceBar.innerHTML = "";
+        
+        participants.forEach((user, index) => {
+            const img = document.createElement("img");
+            img.src = user.avatar;
+            img.className = "sm-presence-avatar";
+            img.style.marginLeft = index === 0 ? "0" : "-12px"; 
+            img.style.zIndex = 10 - index;
+            presenceBar.appendChild(img);
+        });
+
+        if (participants.length > 1) {
+            headerStatus.textContent = `${participants.length} Active Users`;
+        } else {
+            headerStatus.textContent = "Waiting for friend...";
+        }
     });
 
-    if (participants.length > 1) {
-        headerStatus.textContent = `${participants.length} Active Users`;
-    } else {
-        headerStatus.textContent = "Waiting for friend...";
-    }
-});
-
     // --- 2. MESSAGE SEEN LOGIC ---
-    socket.on("newMessage", ({ message, from, msgId }) => {
+    socket.on("newMessage", ({ message, from, msgId, burn }) => {
         try {
             const dec = CryptoJS.AES.decrypt(message, secretKey).toString(CryptoJS.enc.Utf8);
             if (dec) {
-                addMessage(from, dec, "left", msgId);
+                addMessage(from, dec, "left", msgId, null, burn);
                 // Tell server we saw it
                 socket.emit("messageSeen", { roomId, msgId });
             }
@@ -135,8 +152,16 @@ input.addEventListener("keydown", (e) => {
     });
 
     socket.on("msgStatusUpdate", ({ msgId, status }) => {
-        const statusEl = document.querySelector(`[data-id="${msgId}"] .sm-status`);
-        if (statusEl) statusEl.textContent = "✔✔"; // Double tick for seen
+        const msgEl = document.querySelector(`[data-id="${msgId}"]`);
+        if (msgEl) {
+            const statusEl = msgEl.querySelector(".sm-status");
+            if (statusEl) statusEl.textContent = "✔✔"; // Double tick for seen
+            
+            // If it is a burn message, trigger countdown on seen update
+            if (msgEl.classList.contains("burn")) {
+                startBurnTimer(msgId, 10);
+            }
+        }
     });
 
     socket.on("systemMessage", (msg) => {
@@ -153,10 +178,17 @@ input.addEventListener("keydown", (e) => {
         socket.emit("sendMessage", { 
             message: encrypted, 
             msgId: msgId, 
-            replyTo: replyToMsg // Send reply data if exists
+            replyTo: replyToMsg, // Send reply data if exists
+            burn: burnMode
         });
         
-        addMessage(myName + " (You)", msg, "right", msgId, replyToMsg);
+        addMessage(myName + " (You)", msg, "right", msgId, replyToMsg, burnMode);
+        
+        if (burnMode) {
+            burnMode = false;
+            burnToggleBtn.classList.remove("active");
+        }
+        
         cancelReply(); // Clear reply box after sending
         input.value = "";
         input.style.height = "auto";
@@ -173,20 +205,21 @@ input.addEventListener("keydown", (e) => {
             .replace(/'/g, "&#039;");
     }
 
-    // --- 3. DRAG TO REPLY LOGIC ---
-    function addMessage(name, text, side, msgId, replyData = null) {
+    // --- 3. DRAG TO REPLY LOGIC & BURN LOGIC ---
+    function addMessage(name, text, side, msgId, replyData = null, burn = false) {
         const div = document.createElement("div");
-        div.className = `sm-msg ${side}`;
+        div.className = `sm-msg ${side}${burn ? ' burn' : ''}`;
         div.setAttribute("data-id", msgId);
         
         let replyHtml = replyData ? `<div class="sm-reply-preview">Replying to: ${escapeHTML(replyData)}</div>` : "";
-        // Inside addMessage function...
         let statusHtml = side === "right" ? `<span class="sm-status">✔</span>` : "";
+        let burnBadgeHtml = burn ? `<div class="sm-burn-badge">${side === "left" ? "🔥 Burns in 10s" : "🔥 Burns after seen"}</div>` : "";
 
         div.innerHTML = `
             ${replyHtml}
             <div style="font-size:0.7rem;">${escapeHTML(name)}</div>
             <div>${escapeHTML(text)} ${statusHtml}</div>
+            ${burnBadgeHtml}
         `;
 
         // Touch handling for drag-to-reply
@@ -205,6 +238,37 @@ input.addEventListener("keydown", (e) => {
 
         messagesDiv.appendChild(div);
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+        // If burn message and we are receiver, start countdown immediately
+        if (burn && side === "left") {
+            startBurnTimer(msgId, 10);
+        }
+    }
+
+    function startBurnTimer(msgId, duration) {
+        const msgEl = document.querySelector(`[data-id="${msgId}"]`);
+        if (!msgEl) return;
+        
+        // Prevent double timers
+        if (msgEl.hasAttribute("data-burning")) return;
+        msgEl.setAttribute("data-burning", "true");
+
+        let timeLeft = duration;
+        const badge = msgEl.querySelector(".sm-burn-badge");
+        if (badge) badge.textContent = `🔥 Burns in ${timeLeft}s`;
+
+        const timer = setInterval(() => {
+            timeLeft--;
+            if (badge) badge.textContent = `🔥 Burns in ${timeLeft}s`;
+
+            if (timeLeft <= 0) {
+                clearInterval(timer);
+                msgEl.classList.add("sm-msg-burn-active");
+                setTimeout(() => {
+                    msgEl.remove();
+                }, 600);
+            }
+        }, 1000);
     }
 
     function initiateReply(text) {
@@ -215,7 +279,7 @@ input.addEventListener("keydown", (e) => {
 
     function cancelReply() {
         replyToMsg = null;
-        input.placeholder = "Type...";
+        input.placeholder = burnMode ? "Sending Burn Message (🔥)..." : "Type...";
     }
 
     // --- EXISTING LOGIC (TIMER, QUIT, REPORT) ---

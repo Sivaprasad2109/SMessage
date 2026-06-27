@@ -121,7 +121,7 @@ const broadcastPresence = (rId) => {
     broadcastPresence(roomData.roomId);
   });
 
-  socket.on("sendMessage", ({ message, msgId, replyTo }) => {
+  socket.on("sendMessage", ({ message, msgId, replyTo, burn }) => {
     if (!socket.roomId) return; 
 
     // Rate Limiting Check
@@ -144,12 +144,13 @@ const broadcastPresence = (rId) => {
     if (typeof message !== "string" || message.length > 10000) return;
     if (replyTo && (typeof replyTo !== "string" || replyTo.length > 1000)) return;
 
-    // NEW: We now include 'msgId' and 'replyTo' in the emission
+    // NEW: We now include 'msgId', 'replyTo', and 'burn' in the emission
     socket.to(socket.roomId).emit("newMessage", { 
         message, 
         from: socket.userName || "Guest",
         msgId: msgId,   // This allows the receiver to "mark as seen"
-        replyTo: replyTo // This shows the "Replying to..." text
+        replyTo: replyTo, // This shows the "Replying to..." text
+        burn: !!burn
     });
   });
 
