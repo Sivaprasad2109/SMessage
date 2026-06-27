@@ -353,8 +353,9 @@
       } else {
         let lastDate = new Date(lastActive);
         let currentDate = new Date(today);
-        let diffTime = Math.abs(currentDate - lastDate);
-        let diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        lastDate.setHours(12, 0, 0, 0);
+        currentDate.setHours(12, 0, 0, 0);
+        let diffDays = Math.round(Math.abs(currentDate - lastDate) / (1000 * 60 * 60 * 24));
 
         if (diffDays === 1) {
           streak++;
