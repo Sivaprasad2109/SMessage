@@ -136,7 +136,7 @@
         const recent = JSON.parse(localStorage.getItem("sm_recent_chats") || "[]");
         if (recent.length === 0) {
           container.innerHTML = `
-            <div class="sm-hero-card glassy-hero" style="text-align: center; padding: 40px 20px; width: min(94%, 500px); margin-top: 30px;">
+            <div class="sm-hero-card glassy-hero" style="text-align: center; padding: 40px 20px; width: min(94%, 500px); margin-top: 30px; flex-direction: column; align-items: center; justify-content: center;">
               <div style="font-size: 3.5rem; margin-bottom: 15px;">💬</div>
               <h2 style="font-size: 1.3rem; margin-bottom: 10px;">No Recent Chats</h2>
               <p style="color: #5B6B8A; font-size: 0.85rem; margin-bottom: 25px; line-height: 1.5;">You haven't joined any persistent public rooms yet. Create or join one to see it listed here.</p>
