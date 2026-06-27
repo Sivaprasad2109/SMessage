@@ -1837,13 +1837,13 @@ html, body {
 
 /* --- LIGHT THEME STYLES --- */
 body.sm-light-theme {
-    background: linear-gradient(-45deg, #e0f2fe, #f3e8ff, #f0fdf4, #fef9c3) !important;
+    background: linear-gradient(-45deg, #e0f2fe, #f3e8ff, #f0fdf4, #ffffff) !important;
     background-size: 400% 400% !important;
     animation: auroraFlow 15s ease infinite !important;
 }
 
 body.sm-light-theme .sm-page-bg.modern-ui {
-    background: linear-gradient(-45deg, #e0f2fe, #f3e8ff, #f0fdf4, #fef9c3) !important;
+    background: linear-gradient(-45deg, #e0f2fe, #f3e8ff, #f0fdf4, #fbfbfb) !important;
     background-size: 400% 400% !important;
     animation: auroraFlow 15s ease infinite !important;
 }
