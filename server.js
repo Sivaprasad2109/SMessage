@@ -19,7 +19,7 @@ const PORT = process.env.PORT || 3000;
 app.use(helmet({ contentSecurityPolicy: false, crossOriginEmbedderPolicy: false }));
 app.use(express.json());
 app.use(rateLimit({ windowMs: 60 * 1000, max: 100 }));
-app.use(express.static(path.join(__dirname, "public")));
+app.use(express.static(path.join(__dirname, "www")));
 app.use("/crypto-js", express.static(path.join(__dirname, "node_modules/crypto-js")));
 
 const rooms = new Map(); 
@@ -216,13 +216,17 @@ socket.on("messageSeen", ({ roomId, msgId }) => {
 
 server.listen(PORT, () => console.log(`🚀 Server on port ${PORT}`));
 
-// KEEP ALIVE
-const APP_URL = "https://blinkchat-i72t.onrender.com";
-setInterval(async () => {
-  try {
-    const response = await axios.get(APP_URL);
-    console.log(`Keep-Alive: Status ${response.status}`);
-  } catch (err) {
-    console.error("Keep-Alive Failed");
-  }
-}, 840000);
+// KEEP ALIVE (Dynamic)
+const APP_URL = process.env.APP_URL;
+if (APP_URL) {
+  setInterval(async () => {
+    try {
+      const response = await axios.get(APP_URL);
+      console.log(`Keep-Alive: Status ${response.status}`);
+    } catch (err) {
+      console.error("Keep-Alive Failed:", err.message);
+    }
+  }, 840000);
+} else {
+  console.log("ℹ️ APP_URL env variable not set. Keep-Alive pinger disabled.");
+}

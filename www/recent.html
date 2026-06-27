@@ -93,7 +93,6 @@
     </a>
   </nav>
 
-  <script src="/socket.io/socket.io.js"></script>
   <script>
     if (window.Android) window.Android.setBannerVisible(true);
     
@@ -180,7 +179,7 @@
           btn.addEventListener("click", () => {
             const rId = btn.getAttribute("data-room");
             const p = btn.getAttribute("data-passcode");
-            window.location.href = `join.html?room=${rId}&p=${p}&roomType=public`;
+            window.location.href = `join.html?room=${rId}&roomType=public#p=${p}`;
           });
         });
 

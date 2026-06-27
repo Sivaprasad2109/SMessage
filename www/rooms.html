@@ -145,12 +145,23 @@
   </nav>
 
   <script src="crypto-js/crypto-js.js"></script>
-  <script src="/socket.io/socket.io.js"></script>
+  <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
   <script>
-    if (window.Android) window.Android.setBannerVisible(true);
+    try {
+      if (window.Android && typeof window.Android.setBannerVisible === "function") {
+        window.Android.setBannerVisible(true);
+      }
+    } catch (e) {
+      console.warn("Android banner ad display failed:", e);
+    }
     
     window.addEventListener("load", () => {
-      const socket = io(window.location.origin, { transports: ["websocket", "polling"] });
+      // Dynamic Server URL: local port indicates local testing, otherwise connect to hosted production server
+      const SERVER_URL = (window.location.hostname === "localhost" && window.location.port !== "")
+        ? window.location.origin
+        : "https://blinkchat-i72t.onrender.com";
+
+      const socket = io(SERVER_URL, { transports: ["websocket", "polling"] });
 
       // Theme toggle implementation
       const themeToggleBtn = document.getElementById("themeToggleBtn");
@@ -216,7 +227,13 @@
       const linkDisplay = document.getElementById('linkDisplay');
       
       createBtn.addEventListener('click', () => {
-        if (window.Android) window.Android.showAd();
+        try {
+          if (window.Android && typeof window.Android.showAd === "function") {
+            window.Android.showAd();
+          }
+        } catch (e) {
+          console.warn("Android interstitial ad failed:", e);
+        }
         const selectedSize = document.querySelector('input[name="roomSize"]:checked').value;
         const selectedType = document.querySelector('input[name="roomType"]:checked').value;
         createBtn.disabled = true;
@@ -249,7 +266,7 @@
           if (countText) countText.textContent = `Redirecting in ${count}s...`;
           if (count <= 0) { 
             clearInterval(t); 
-            window.location.href = `join.html?room=${roomId}&p=${passcode}&key=${secretKey}&expireAt=${expireAt}&roomType=${roomType || 'private'}`; 
+            window.location.href = `join.html?room=${roomId}&expireAt=${expireAt}&roomType=${roomType || 'private'}#p=${passcode}`; 
           }
         }, 1000);
       });
@@ -280,8 +297,7 @@
       });
 
       socket.on('joinSuccess', ({ roomId, passcode, expireAt, roomType }) => {
-        const secretKey = CryptoJS.SHA256(passcode).toString();
-        window.location.href = `join.html?room=${roomId}&p=${passcode}&key=${secretKey}&expireAt=${expireAt}&roomType=${roomType || 'private'}`;
+        window.location.href = `join.html?room=${roomId}&expireAt=${expireAt}&roomType=${roomType || 'private'}#p=${passcode}`;
       });
 
       socket.on('error', (err) => {

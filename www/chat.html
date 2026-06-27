@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SMessage Chat</title><link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
+  <script src="crypto-js/crypto-js.js"></script>
+</head>
+<body class="sm-full-chat-body">
+  <script>
+    (() => {
+      const currentTheme = localStorage.getItem("sm_theme") || "dark";
+      if (currentTheme === "light") {
+        document.body.classList.add("sm-light-theme");
+      }
+    })();
+  </script>
+  <main class="sm-chat-wrap sm-page-entrance">
+    <header class="sm-chat-header">
+  <div class="sm-header-info">
+    <div class="sm-chat-title" style="font-weight: 600;">Private Room</div>
+    <div class="sm-chat-sub" style="font-size: 0.75rem; opacity: 0.8;">Encrypted</div>
+  </div>
+  <div class="sm-room-meta">
+    <button id="themeToggleBtn" class="sm-theme-toggle-pill" style="margin-right: 5px; padding: 6px 10px; font-size: 0.8rem;">🌙</button>
+    <button id="reportBtn" class="sm-btn" style="background: rgba(255,255,255,0.15); color: #fff; padding: 6px 10px; font-size: 0.8rem; border: 1px solid rgba(255,255,255,0.3); margin-right: 5px;">🚩 Report</button>
+    
+    <span id="roomIdBox" style="font-size: 0.85rem; background: rgba(255,255,255,0.2); padding: 4px 8px; border-radius: 6px;"></span>
+    <span id="timerBox" style="font-family: monospace; font-weight: bold;">00:00</span>
+    <button id="quitBtn" class="sm-btn" style="background:#fff; color:#0a53c9; padding: 6px 12px; font-size: 0.85rem; border-radius: 8px;">Quit</button>
+  </div>
+</header>
+<div class="sm-presence-wrapper">
+    <div class="sm-presence-card">
+        <div id="presenceBar" class="sm-avatar-stack"></div>
+        <div class="sm-presence-info">
+            <span id="headerStatus" class="sm-status-text">Waiting for friends...</span>
+            <span class="sm-encrypted-tag">🔒 End-to-End Encrypted</span>
+        </div>
+    </div>
+</div>
+    <section class="sm-chat-card">
+      <div id="messages" class="sm-messages"></div>
+      <div id="typingIndicator" style="display:none; text-align:center;">Friend is typing...</div>
+      <div class="sm-input-row">
+        <button id="burnToggleBtn" class="sm-burn-toggle" title="Toggle Burn After Reading">🔥</button>
+        <textarea id="messageInput" class="sm-message-input" placeholder="Type..." rows="1"></textarea>
+        <button id="sendBtn" class="sm-send-btn">Send</button>
+      </div>
+    </section>
+  </main>
+try {
+  if (window.Android && typeof window.Android.setBannerVisible === "function") {
+    window.Android.setBannerVisible(false);
+  }
+} catch (e) {
+  console.warn("Android banner ad toggle failed:", e);
+}
+(() => {
+    // Apply selected premium theme if unlocked and set
+    const selectedTheme = localStorage.getItem("sm_selected_theme") || "default";
+    if (selectedTheme !== "default") {
+        document.body.style.background = `url('theme_${selectedTheme}.png') no-repeat center center fixed`;
+        document.body.style.backgroundSize = "cover";
+    }
+
+    // Helper to get hash parameters
+    function getHashParam(name) {
+        const hash = window.location.hash.substring(1);
+        const hashParams = new URLSearchParams(hash);
+        return hashParams.get(name);
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    
+    // Dynamic Server URL: local hostname with port indicates local web development, otherwise remote Render server
+    const SERVER_URL = (window.location.hostname === "localhost" && window.location.port !== "")
+        ? window.location.origin
+        : "https://blinkchat-i72t.onrender.com";
+
+    const socket = io(SERVER_URL, { transports: ["websocket", "polling"], reconnection: true });
+    
+    let roomId = params.get("room") || localStorage.getItem("last_room_id");
+    let passcode = getHashParam("p") || params.get("p") || localStorage.getItem("last_passcode");
+    let secretKey = passcode ? CryptoJS.SHA256(passcode).toString() : (params.get("key") || localStorage.getItem("last_secret_key"));
+    let expireAt = Number(params.get("expireAt")) || Number(localStorage.getItem("last_expire_at")) || 0;
+    let roomType = params.get("roomType") || localStorage.getItem("last_room_type") || "private";
+    let myName = params.get("name") || localStorage.getItem("blinkchat_name") || "Guest";
+
+    if (!roomId || roomId === "null") { window.location.href = "index.html"; return; }
+
+    // Save to Recent Chats if Public room
+    if (roomType === "public") {
+        let recent = JSON.parse(localStorage.getItem("sm_recent_chats") || "[]");
+        if (!recent.some(c => c.roomId === roomId)) {
+            recent.push({
+                roomId: roomId,
+                passcode: passcode,
+                joinedAt: new Date().toLocaleDateString()
+            });
+            localStorage.setItem("sm_recent_chats", JSON.stringify(recent));
+        }
+    }
+
+    const messagesDiv = document.getElementById("messages");
+    
+    // Load and Render Saved Chat History
+    const savedHistory = JSON.parse(localStorage.getItem(`sm_chat_history_${roomId}`) || "[]");
+    savedHistory.forEach(m => {
+        addMessage(m.name, m.text, m.side, m.msgId, m.replyData, false, true, m.seen);
+    });
+    const input = document.getElementById("messageInput");
+    const sendBtn = document.getElementById("sendBtn");
+    const burnToggleBtn = document.getElementById("burnToggleBtn");
+    const themeToggleBtn = document.getElementById("themeToggleBtn");
+    
+    if (themeToggleBtn) {
+        const currentTheme = localStorage.getItem("sm_theme") || "dark";
+        themeToggleBtn.textContent = currentTheme === "light" ? "☀️" : "🌙";
+        themeToggleBtn.addEventListener("click", () => {
+            document.body.classList.toggle("sm-light-theme");
+            const isLight = document.body.classList.contains("sm-light-theme");
+            localStorage.setItem("sm_theme", isLight ? "light" : "dark");
+            themeToggleBtn.textContent = isLight ? "☀️" : "🌙";
+        });
+    }
+    
+    let burnMode = false;
+    let replyToMsg = null; // Tracks which message is being replied to
+
+    // --- CHAT HISTORY HELPERS ---
+    function saveToHistory(msg) {
+        let history = JSON.parse(localStorage.getItem(`sm_chat_history_${roomId}`) || "[]");
+        history.push(msg);
+        localStorage.setItem(`sm_chat_history_${roomId}`, JSON.stringify(history));
+    }
+
+    function updateMessageSeenInHistory(msgId) {
+        let history = JSON.parse(localStorage.getItem(`sm_chat_history_${roomId}`) || "[]");
+        let msg = history.find(m => m.msgId === msgId);
+        if (msg) {
+            msg.seen = true;
+            localStorage.setItem(`sm_chat_history_${roomId}`, JSON.stringify(history));
+        }
+    }
+
+    // Toggle Burn Mode
+    burnToggleBtn.addEventListener("click", () => {
+        burnMode = !burnMode;
+        if (burnMode) {
+            burnToggleBtn.classList.add("active");
+            input.placeholder = "Sending Burn Message (🔥)...";
+        } else {
+            burnToggleBtn.classList.remove("active");
+            input.placeholder = "Type...";
+        }
+    });
+
+    // --- KEYBOARD & LAYOUT FIXES ---
+
+    // FIX 1: Prevent keyboard from disappearing when clicking 'Send'
+    // 'mousedown' happens before 'click' and 'focusout'
+    sendBtn.addEventListener("mousedown", (e) => {
+        e.preventDefault(); // Prevents the input from losing focus
+    });
+
+    // FIX 2: Handle Send Button Click (keeping focus)
+    sendBtn.addEventListener("click", () => {
+        sendMessage();
+        input.focus(); // Re-focus just in case of a glitch
+    });
+
+    // FIX 3: Handle 'Enter' key without a new line or losing focus
+    input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault(); // Stops the new line (\n)
+            sendMessage();
+            // Focus stays on input, so keyboard stays up
+        }
+    });
+
+    document.getElementById("roomIdBox").textContent = `Code: ${passcode}`;
+
+    // --- 1. ACTIVE USER COUNT UI UPDATE ---
+    socket.on("updateUserCount", (count) => {
+        const subHeader = document.querySelector(".sm-chat-sub");
+        if (count >= 2) {
+            subHeader.textContent = "Friend Joined";
+            subHeader.style.color = "#4CAF50"; 
+        } else {
+            subHeader.textContent = "Waiting for friend...";
+            subHeader.style.color = "rgba(255,255,255,0.8)";
+        }
+    });
+    socket.on("updateParticipants", (participants) => {
+        const presenceBar = document.getElementById("presenceBar");
+        const headerStatus = document.getElementById("headerStatus");
+        
+        presenceBar.innerHTML = "";
+        
+        participants.forEach((user, index) => {
+            const img = document.createElement("img");
+            img.src = user.avatar;
+            img.className = "sm-presence-avatar";
+            img.style.marginLeft = index === 0 ? "0" : "-12px"; 
+            img.style.zIndex = 10 - index;
+            presenceBar.appendChild(img);
+        });
+
+        if (participants.length > 1) {
+            headerStatus.textContent = `${participants.length} Active Users`;
+        } else {
+            headerStatus.textContent = "Waiting for friend...";
+        }
+    });
+
+    // --- 2. MESSAGE SEEN LOGIC ---
+    socket.on("newMessage", ({ message, from, msgId, burn }) => {
+        try {
+            const dec = CryptoJS.AES.decrypt(message, secretKey).toString(CryptoJS.enc.Utf8);
+            if (dec) {
+                addMessage(from, dec, "left", msgId, null, burn);
+                // Save to history if not burn message
+                if (!burn) {
+                    saveToHistory({ msgId, name: from, text: dec, side: "left", replyData: null, seen: true });
+                }
+                // Tell server we saw it
+                socket.emit("messageSeen", { roomId, msgId });
+            }
+        } catch (e) { addMessage("System", "[Decryption Error]", "center"); }
+    });
+
+    socket.on("msgStatusUpdate", ({ msgId, status }) => {
+        const msgEl = document.querySelector(`[data-id="${msgId}"]`);
+        if (msgEl) {
+            const statusEl = msgEl.querySelector(".sm-status");
+            if (statusEl) statusEl.textContent = "✔✔"; // Double tick for seen
+            
+            // Update in history
+            updateMessageSeenInHistory(msgId);
+
+            // If it is a burn message, trigger countdown on seen update
+            if (msgEl.classList.contains("burn")) {
+                startBurnTimer(msgId, 10);
+            }
+        }
+    });
+
+    socket.on("systemMessage", (msg) => {
+        addMessage("", msg, "center", "sys_" + Date.now());
+    });
+
+    function sendMessage() {
+        const msg = input.value.trim();
+        if (!msg || !secretKey || !socket.connected) return;
+
+        const msgId = "msg_" + Date.now();
+        const encrypted = CryptoJS.AES.encrypt(msg, secretKey).toString();
+        
+        socket.emit("sendMessage", { 
+            message: encrypted, 
+            msgId: msgId, 
+            replyTo: replyToMsg, // Send reply data if exists
+            burn: burnMode
+        });
+        
+        addMessage(myName + " (You)", msg, "right", msgId, replyToMsg, burnMode);
+        
+        // Save to history if not burn message
+        if (!burnMode) {
+            saveToHistory({ msgId, name: myName + " (You)", text: msg, side: "right", replyData: replyToMsg, seen: false });
+        }
+
+        if (burnMode) {
+            burnMode = false;
+            burnToggleBtn.classList.remove("active");
+        }
+        
+        cancelReply(); // Clear reply box after sending
+        input.value = "";
+        input.style.height = "auto";
+        socket.emit("stopTyping");
+    }
+
+    function escapeHTML(str) {
+        if (!str) return '';
+        return String(str)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+
+    // --- 3. DRAG TO REPLY LOGIC & BURN LOGIC ---
+    function addMessage(name, text, side, msgId, replyData = null, burn = false, isFromHistory = false, wasSeen = false) {
+        const div = document.createElement("div");
+        div.className = `sm-msg ${side}${burn ? ' burn' : ''}`;
+        div.setAttribute("data-id", msgId);
+        
+        let replyHtml = replyData ? `<div class="sm-reply-preview">Replying to: ${escapeHTML(replyData)}</div>` : "";
+        let statusHtml = side === "right" ? `<span class="sm-status">${(isFromHistory || wasSeen) ? '✔✔' : '✔'}</span>` : "";
+        let burnBadgeHtml = burn ? `<div class="sm-burn-badge">${side === "left" ? "🔥 BURNS IN 10S" : "🔥 BURNS AFTER SEEN"}</div>` : "";
+
+        div.innerHTML = `
+            ${replyHtml}
+            <div style="font-size:0.7rem;">${escapeHTML(name)}</div>
+            <div>${escapeHTML(text)} ${statusHtml}</div>
+            ${burnBadgeHtml}
+        `;
+
+        // Touch handling for drag-to-reply
+        let startX = 0;
+        div.addEventListener('touchstart', (e) => { startX = e.touches[0].clientX; }, {passive: true});
+        div.addEventListener('touchmove', (e) => {
+            let diff = e.touches[0].clientX - startX;
+            if (diff > 50 && side === 'left') div.style.transform = `translateX(${Math.min(diff, 100)}px)`;
+        }, {passive: true});
+        div.addEventListener('touchend', (e) => {
+            if (e.changedTouches[0].clientX - startX > 80 && side === 'left') {
+                initiateReply(text);
+            }
+            div.style.transform = "translateX(0px)";
+        });
+
+        messagesDiv.appendChild(div);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+        // If burn message and we are receiver, start countdown immediately
+        if (burn && side === "left") {
+            startBurnTimer(msgId, 10);
+        }
+    }
+
+    function startBurnTimer(msgId, duration) {
+        const msgEl = document.querySelector(`[data-id="${msgId}"]`);
+        if (!msgEl) return;
+        
+        // Prevent double timers
+        if (msgEl.hasAttribute("data-burning")) return;
+        msgEl.setAttribute("data-burning", "true");
+
+        let timeLeft = duration;
+        const badge = msgEl.querySelector(".sm-burn-badge");
+        if (badge) badge.textContent = `🔥 Burns in ${timeLeft}s`;
+
+        const timer = setInterval(() => {
+            timeLeft--;
+            if (badge) badge.textContent = `🔥 Burns in ${timeLeft}s`;
+
+            if (timeLeft <= 0) {
+                clearInterval(timer);
+                msgEl.classList.add("sm-msg-burn-active");
+                setTimeout(() => {
+                    msgEl.remove();
+                }, 600);
+            }
+        }, 1000);
+    }
+
+    function initiateReply(text) {
+        replyToMsg = text;
+        input.placeholder = `Replying to: ${text.substring(0, 20)}...`;
+        input.focus();
+    }
+
+    function cancelReply() {
+        replyToMsg = null;
+        input.placeholder = burnMode ? "Sending Burn Message (🔥)..." : "Type...";
+    }
+
+    // --- EXISTING LOGIC (TIMER, QUIT, REPORT) ---
+    // --- FEATURE 3: RED TIMER & ALERT LOGIC ---
+    let alertShown = false; // Prevents the alert from showing multiple times per second
+
+    const timerBox = document.getElementById("timerBox");
+    if (roomType === "public") {
+        if (timerBox) {
+            timerBox.textContent = "♾️ Public";
+            timerBox.style.fontSize = "0.75rem";
+            timerBox.style.padding = "4px 10px";
+            timerBox.style.background = "rgba(44, 100, 227, 0.2)";
+        }
+    } else {
+        const timerInterval = setInterval(() => {
+            const now = Date.now();
+            const diff = expireAt - now;
+
+            if (diff <= 0) {
+                clearInterval(timerInterval);
+                try {
+                    if (window.Android && typeof window.Android.showAd === "function") {
+                        window.Android.showAd();
+                    }
+                } catch (e) {
+                    console.warn("Android interstitial ad failed:", e);
+                }
+                window.location.href = "index.html";
+            } else {
+                const m = Math.floor(diff / 60000);
+                const s = Math.floor((diff % 60000) / 1000);
+                if (timerBox) timerBox.textContent = `${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
+
+                // Check if 3 minutes (180,000ms) or less are remaining
+                if (diff <= 180000) {
+                    // Add the urgent red pulsing class from your style.css
+                    if (timerBox) timerBox.classList.add("sm-timer-urgent");
+
+                    // Show the floating alert only once when the threshold is hit
+                    if (!alertShown) {
+                        showFloatingWarning("3 Minutes Remaining! Wrap up your chat.");
+                        alertShown = true;
+                    }
+                }
+            }
+        }, 1000);
+    }
+
+    // Helper function to create and show the floating alert
+    function showFloatingWarning(text) {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = 'sm-floating-alert';
+        alertDiv.textContent = text;
+        document.body.appendChild(alertDiv);
+
+        // Remove the alert after 5 seconds
+        setTimeout(() => {
+            alertDiv.style.opacity = '0';
+            alertDiv.style.transform = 'translate3d(-50%, -120px, 0) scale(0.9)';
+            setTimeout(() => alertDiv.remove(), 400);
+        }, 5000);
+    }
+
+    socket.on("connect", () => { 
+    const myAvatar = params.get("avatar") || "f1.png"; // Get it from URL
+    socket.emit("joinRoom", { roomId, passcode, name: myName, avatar: myAvatar }); 
+});
+    sendBtn.addEventListener("click", sendMessage);
+    
+    document.getElementById("quitBtn").addEventListener("click", () => {
+        if (confirm("Quit and delete chat history?")) {
+            try {
+                if (window.Android && typeof window.Android.showAd === "function") {
+                    window.Android.showAd();
+                }
+            } catch (e) {
+                console.warn("Android interstitial ad failed:", e);
+            }
+            
+            // Clean up from recent chats
+            let recent = JSON.parse(localStorage.getItem("sm_recent_chats") || "[]");
+            recent = recent.filter(c => c.roomId !== roomId);
+            localStorage.setItem("sm_recent_chats", JSON.stringify(recent));
+
+            // Clean up chat messages history
+            localStorage.removeItem(`sm_chat_history_${roomId}`);
+
+            socket.emit("destroyRoom");
+            window.location.href = "index.html";
+        }
+    });
+
+    socket.on("roomDestroyed", () => {
+        let recent = JSON.parse(localStorage.getItem("sm_recent_chats") || "[]");
+        recent = recent.filter(c => c.roomId !== roomId);
+        localStorage.setItem("sm_recent_chats", JSON.stringify(recent));
+
+        // Clean up chat messages history
+        localStorage.removeItem(`sm_chat_history_${roomId}`);
+
+        alert("The room was closed by a participant.");
+        window.location.href = "index.html";
+    });
+
+    // Typing Logic
+    let typingTimer;
+    input.addEventListener("input", () => {
+        socket.emit(input.value.trim().length > 0 ? "typing" : "stopTyping");
+        clearTimeout(typingTimer);
+        typingTimer = setTimeout(() => socket.emit("stopTyping"), 2000);
+        input.style.height = "auto";
+        input.style.height = Math.min(input.scrollHeight, 110) + "px";
+    });
+
+    socket.on("showTyping", ({ from }) => {
+        const indicator = document.getElementById("typingIndicator");
+        indicator.innerHTML = `${from} is typing<div class="sm-typing-dots"><span></span><span></span><span></span></div>`;
+        indicator.style.display = "flex";
+        void indicator.offsetWidth; // Trigger reflow for transition
+        indicator.style.opacity = "1";
+    });
+    socket.on("hideTyping", () => {
+        const indicator = document.getElementById("typingIndicator");
+        indicator.style.opacity = "0";
+        setTimeout(() => {
+            if (indicator.style.opacity === "0") {
+                indicator.style.display = "none";
+            }
+        }, 250);
+    });
+
+})(); // Close the IIFE
+</script>
+</body>
+</html>
