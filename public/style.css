@@ -1815,3 +1815,248 @@ html, body {
     animation: burnPuff 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards !important;
     pointer-events: none;
 }
+
+/* --- THEME TOGGLE BUTTON PILL --- */
+.sm-theme-toggle-pill {
+    background: rgba(255, 255, 255, 0.08);
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    padding: 8px 14px;
+    border-radius: 20px;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+.sm-theme-toggle-pill:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: scale(1.05);
+}
+
+/* --- LIGHT THEME STYLES --- */
+body.sm-light-theme {
+    background: linear-gradient(-45deg, #e0f2fe, #f3e8ff, #f0fdf4, #fef9c3) !important;
+    background-size: 400% 400% !important;
+    animation: auroraFlow 15s ease infinite !important;
+}
+
+body.sm-light-theme .sm-page-bg.modern-ui {
+    background: linear-gradient(-45deg, #e0f2fe, #f3e8ff, #f0fdf4, #fef9c3) !important;
+    background-size: 400% 400% !important;
+    animation: auroraFlow 15s ease infinite !important;
+}
+
+/* Glassy 50% opacity cards on light theme with white-blue mixed fill */
+.sm-light-theme .sm-streak-card,
+.sm-light-theme .sm-action-card-scrollable,
+.sm-light-theme .glass-action-card,
+.sm-light-theme .sm-themes-panel,
+.sm-light-theme .sm-hero-card.glassy-hero,
+.sm-light-theme .sm-chat-card,
+.sm-light-theme .sm-presence-card {
+    background: rgba(224, 242, 254, 0.5) !important;
+    backdrop-filter: blur(15px) !important;
+    -webkit-backdrop-filter: blur(15px) !important;
+    border: 1px solid rgba(44, 100, 227, 0.2) !important;
+    box-shadow: 0 10px 25px rgba(44, 100, 227, 0.08) !important;
+}
+
+/* Adjust text colors inside the cards */
+.sm-light-theme h2,
+.sm-light-theme h3,
+.sm-light-theme h4,
+.sm-light-theme .sm-streak-subtitle,
+.sm-light-theme .title,
+.sm-light-theme .sm-status-text,
+.sm-light-theme .sm-chat-title,
+.sm-light-theme .sm-title {
+    color: #0f2d5c !important;
+}
+
+.sm-light-theme p,
+.sm-light-theme .sm-streak-title,
+.sm-light-theme .sm-streak-count,
+.sm-light-theme .sm-tagline,
+.sm-light-theme .sm-chat-sub {
+    color: #4b6b94 !important;
+}
+
+/* Active background blobs in light theme (softer contrast) */
+.sm-light-theme .sm-aurora-blob {
+    opacity: 0.15 !important;
+}
+
+/* Custom lock indicator & headers in light theme */
+.sm-light-theme .sm-streak-lock,
+.sm-light-theme .sm-themes-header,
+.sm-light-theme .sm-themes-title-wrap h4 {
+    color: #0f2d5c !important;
+}
+
+.sm-light-theme .sm-themes-title-wrap p {
+    color: #4b6b94 !important;
+}
+
+.sm-light-theme .sm-streak-progress-bar {
+    background: rgba(44, 100, 227, 0.1) !important;
+}
+
+.sm-light-theme .chevron-icon path {
+    stroke: #0f2d5c !important;
+}
+
+/* Inputs in light theme */
+.sm-light-theme #joinRoomInput {
+    background: rgba(44, 100, 227, 0.05) !important;
+    border-color: rgba(44, 100, 227, 0.2) !important;
+    color: #0f2d5c !important;
+}
+
+.sm-light-theme #joinRoomInput::placeholder {
+    color: rgba(15, 45, 92, 0.4) !important;
+}
+
+/* Capacity Toggle Segmented control in light theme */
+.sm-light-theme .sm-segmented-control {
+    background: rgba(44, 100, 227, 0.05) !important;
+    border: 1px solid rgba(44, 100, 227, 0.15) !important;
+}
+
+.sm-light-theme .sm-segmented-control label {
+    color: #4b6b94 !important;
+}
+
+.sm-light-theme .sm-segmented-control .sm-slider {
+    background: #2C64E3 !important;
+}
+
+.sm-light-theme #size2:checked ~ label[for="size2"],
+.sm-light-theme #size4:checked ~ label[for="size4"],
+.sm-light-theme #size6:checked ~ label[for="size6"] {
+    color: #ffffff !important;
+}
+
+/* Chat Bubbles in light theme */
+.sm-light-theme .sm-msg.left {
+    background: rgba(44, 100, 227, 0.1) !important;
+    color: #0f2d5c !important;
+}
+.sm-light-theme .sm-msg.left div {
+    color: #0f2d5c !important;
+}
+
+.sm-light-theme .sm-msg.right {
+    background: #2C64E3 !important;
+    color: #ffffff !important;
+}
+.sm-light-theme .sm-msg.right div {
+    color: #ffffff !important;
+}
+
+/* Burn messages in light theme */
+.sm-light-theme .sm-msg.burn {
+    border: 1.5px dashed #ff5722 !important;
+    box-shadow: 0 4px 15px rgba(255, 87, 34, 0.15) !important;
+}
+.sm-light-theme .sm-msg.burn.left {
+    background: rgba(255, 87, 34, 0.08) !important;
+    color: #d84315 !important;
+}
+.sm-light-theme .sm-msg.burn.left div {
+    color: #d84315 !important;
+}
+.sm-light-theme .sm-msg.burn.right {
+    background: #e64a19 !important;
+    color: #ffffff !important;
+}
+.sm-light-theme .sm-msg.burn.right div {
+    color: #ffffff !important;
+}
+.sm-light-theme .sm-burn-badge {
+    color: #ff5722 !important;
+    background: rgba(255, 87, 34, 0.1) !important;
+}
+.sm-light-theme .sm-msg.right .sm-burn-badge {
+    color: #ffea00 !important;
+    background: rgba(255, 255, 255, 0.15) !important;
+}
+
+/* Chat Input styling in light theme */
+.sm-light-theme .sm-input-row {
+    border-top: 1px solid rgba(44, 100, 227, 0.1) !important;
+}
+
+.sm-light-theme .sm-message-input {
+    background: rgba(255, 255, 255, 0.6) !important;
+    border-color: rgba(44, 100, 227, 0.15) !important;
+    color: #0f2d5c !important;
+}
+
+.sm-light-theme .sm-message-input::placeholder {
+    color: rgba(15, 45, 92, 0.4) !important;
+}
+
+.sm-light-theme .sm-burn-toggle {
+    background: rgba(44, 100, 227, 0.05) !important;
+    border-color: rgba(44, 100, 227, 0.15) !important;
+    color: #4b6b94 !important;
+}
+
+.sm-light-theme .sm-burn-toggle.active {
+    background: rgba(255, 87, 34, 0.15) !important;
+    color: #ff5722 !important;
+    border-color: #ff5722 !important;
+}
+
+.sm-light-theme .sm-send-btn {
+    background: #2C64E3 !important;
+    box-shadow: 0 4px 10px rgba(44, 100, 227, 0.3) !important;
+}
+
+.sm-light-theme .sm-timer {
+    background: rgba(44, 100, 227, 0.1) !important;
+    color: #0f2d5c !important;
+}
+
+.sm-light-theme .sm-status {
+    color: rgba(15, 45, 92, 0.4) !important;
+}
+
+.sm-light-theme .sm-status.seen {
+    color: #2C64E3 !important;
+}
+
+.sm-light-theme .sm-theme-toggle-pill {
+    background: rgba(0, 0, 0, 0.05) !important;
+    color: #0f2d5c !important;
+    border: 1px solid rgba(44, 100, 227, 0.15) !important;
+}
+
+/* Bottom Navigation in light theme */
+.sm-light-theme .sm-bottom-nav.modern-nav {
+    background: rgba(255, 255, 255, 0.8) !important;
+    border: 1px solid rgba(44, 100, 227, 0.15) !important;
+    box-shadow: 0 10px 30px rgba(44, 100, 227, 0.1) !important;
+}
+
+.sm-light-theme .sm-bottom-nav.modern-nav .nav-item {
+    color: #64748b !important;
+}
+
+.sm-light-theme .sm-bottom-nav.modern-nav .nav-item.active {
+    color: #2C64E3 !important;
+}
+
+.sm-light-theme .sm-bottom-nav.modern-nav .nav-item .icon svg {
+    stroke: #64748b !important;
+}
+
+.sm-light-theme .sm-bottom-nav.modern-nav .nav-item.active .icon svg {
+    stroke: #2C64E3 !important;
+}
+
+.sm-light-theme .sm-chats-floating-btn {
+    border-color: #ffffff !important;
+}

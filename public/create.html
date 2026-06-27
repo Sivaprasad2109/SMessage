@@ -10,6 +10,14 @@
 </head>
 
 <body class="sm-page-bg modern-ui">
+  <script>
+    (() => {
+      const currentTheme = localStorage.getItem("sm_theme") || "dark";
+      if (currentTheme === "light") {
+        document.body.classList.add("sm-light-theme");
+      }
+    })();
+  </script>
 
   <div class="sm-aurora-blob blob-1"></div>
   <div class="sm-aurora-blob blob-2"></div>
@@ -22,6 +30,7 @@
         <p class="sm-tagline">Create New Room</p>
       </div>
     </div>
+    <button id="themeToggleBtn" class="sm-theme-toggle-pill" title="Toggle Theme">🌙</button>
   </header>
 
   <main class="sm-content-scroll sm-page-entrance" style="padding: 20px;">
@@ -107,6 +116,19 @@
   <script>
     if (window.Android) window.Android.setBannerVisible(true);
     window.addEventListener("load", () => {
+      // Theme Toggle Logic
+      const themeToggleBtn = document.getElementById("themeToggleBtn");
+      if (themeToggleBtn) {
+        const currentTheme = localStorage.getItem("sm_theme") || "dark";
+        themeToggleBtn.textContent = currentTheme === "light" ? "☀️" : "🌙";
+        themeToggleBtn.addEventListener("click", () => {
+          document.body.classList.toggle("sm-light-theme");
+          const isLight = document.body.classList.contains("sm-light-theme");
+          localStorage.setItem("sm_theme", isLight ? "light" : "dark");
+          themeToggleBtn.textContent = isLight ? "☀️" : "🌙";
+        });
+      }
+
       const socket = io(window.location.origin, { transports: ["websocket", "polling"] });
       
       const createBtn = document.getElementById('createRoomActionBtn');
