@@ -240,6 +240,9 @@ html, body {
     transition: transform 0.15s ease-out;
     position: relative;
 }
+.sm-msg div {
+    color: inherit;
+}
 
 .sm-msg.left {
     align-self: flex-start;
