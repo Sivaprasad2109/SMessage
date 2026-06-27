@@ -85,6 +85,12 @@ if (window.Android) window.Android.setBannerVisible(false);
     }
 
     const messagesDiv = document.getElementById("messages");
+    
+    // Load and Render Saved Chat History
+    const savedHistory = JSON.parse(localStorage.getItem(`sm_chat_history_${roomId}`) || "[]");
+    savedHistory.forEach(m => {
+        addMessage(m.name, m.text, m.side, m.msgId, m.replyData, false, true, m.seen);
+    });
     const input = document.getElementById("messageInput");
     const sendBtn = document.getElementById("sendBtn");
     const burnToggleBtn = document.getElementById("burnToggleBtn");
@@ -103,6 +109,22 @@ if (window.Android) window.Android.setBannerVisible(false);
     
     let burnMode = false;
     let replyToMsg = null; // Tracks which message is being replied to
+
+    // --- CHAT HISTORY HELPERS ---
+    function saveToHistory(msg) {
+        let history = JSON.parse(localStorage.getItem(`sm_chat_history_${roomId}`) || "[]");
+        history.push(msg);
+        localStorage.setItem(`sm_chat_history_${roomId}`, JSON.stringify(history));
+    }
+
+    function updateMessageSeenInHistory(msgId) {
+        let history = JSON.parse(localStorage.getItem(`sm_chat_history_${roomId}`) || "[]");
+        let msg = history.find(m => m.msgId === msgId);
+        if (msg) {
+            msg.seen = true;
+            localStorage.setItem(`sm_chat_history_${roomId}`, JSON.stringify(history));
+        }
+    }
 
     // Toggle Burn Mode
     burnToggleBtn.addEventListener("click", () => {
@@ -180,6 +202,10 @@ if (window.Android) window.Android.setBannerVisible(false);
             const dec = CryptoJS.AES.decrypt(message, secretKey).toString(CryptoJS.enc.Utf8);
             if (dec) {
                 addMessage(from, dec, "left", msgId, null, burn);
+                // Save to history if not burn message
+                if (!burn) {
+                    saveToHistory({ msgId, name: from, text: dec, side: "left", replyData: null, seen: true });
+                }
                 // Tell server we saw it
                 socket.emit("messageSeen", { roomId, msgId });
             }
@@ -192,6 +218,9 @@ if (window.Android) window.Android.setBannerVisible(false);
             const statusEl = msgEl.querySelector(".sm-status");
             if (statusEl) statusEl.textContent = "✔✔"; // Double tick for seen
             
+            // Update in history
+            updateMessageSeenInHistory(msgId);
+
             // If it is a burn message, trigger countdown on seen update
             if (msgEl.classList.contains("burn")) {
                 startBurnTimer(msgId, 10);
@@ -219,6 +248,11 @@ if (window.Android) window.Android.setBannerVisible(false);
         
         addMessage(myName + " (You)", msg, "right", msgId, replyToMsg, burnMode);
         
+        // Save to history if not burn message
+        if (!burnMode) {
+            saveToHistory({ msgId, name: myName + " (You)", text: msg, side: "right", replyData: replyToMsg, seen: false });
+        }
+
         if (burnMode) {
             burnMode = false;
             burnToggleBtn.classList.remove("active");
@@ -241,13 +275,13 @@ if (window.Android) window.Android.setBannerVisible(false);
     }
 
     // --- 3. DRAG TO REPLY LOGIC & BURN LOGIC ---
-    function addMessage(name, text, side, msgId, replyData = null, burn = false) {
+    function addMessage(name, text, side, msgId, replyData = null, burn = false, isFromHistory = false, wasSeen = false) {
         const div = document.createElement("div");
         div.className = `sm-msg ${side}${burn ? ' burn' : ''}`;
         div.setAttribute("data-id", msgId);
         
         let replyHtml = replyData ? `<div class="sm-reply-preview">Replying to: ${escapeHTML(replyData)}</div>` : "";
-        let statusHtml = side === "right" ? `<span class="sm-status">✔</span>` : "";
+        let statusHtml = side === "right" ? `<span class="sm-status">${(isFromHistory || wasSeen) ? '✔✔' : '✔'}</span>` : "";
         let burnBadgeHtml = burn ? `<div class="sm-burn-badge">${side === "left" ? "🔥 Burns in 10s" : "🔥 Burns after seen"}</div>` : "";
 
         div.innerHTML = `
@@ -388,6 +422,9 @@ if (window.Android) window.Android.setBannerVisible(false);
             recent = recent.filter(c => c.roomId !== roomId);
             localStorage.setItem("sm_recent_chats", JSON.stringify(recent));
 
+            // Clean up chat messages history
+            localStorage.removeItem(`sm_chat_history_${roomId}`);
+
             socket.emit("destroyRoom");
             window.location.href = "index.html";
         }
@@ -397,6 +434,10 @@ if (window.Android) window.Android.setBannerVisible(false);
         let recent = JSON.parse(localStorage.getItem("sm_recent_chats") || "[]");
         recent = recent.filter(c => c.roomId !== roomId);
         localStorage.setItem("sm_recent_chats", JSON.stringify(recent));
+
+        // Clean up chat messages history
+        localStorage.removeItem(`sm_chat_history_${roomId}`);
+
         alert("The room was closed by a participant.");
         window.location.href = "index.html";
     });

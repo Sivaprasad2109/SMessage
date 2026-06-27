@@ -278,6 +278,14 @@
         });
       }
       
+      // Chats Floating Button Vibration
+      const chatsFloatingBtn = document.querySelector(".chats-floating");
+      if (chatsFloatingBtn) {
+        chatsFloatingBtn.addEventListener("click", () => {
+          if (navigator.vibrate) navigator.vibrate(50);
+        });
+      }
+      
       // IAP LOGIC
       const removeAdsBtn = document.getElementById('removeAdsBtn');
       const pricingModal = document.getElementById('pricingModal');

@@ -103,6 +103,14 @@
         });
       }
 
+      // Chats Floating Button Vibration
+      const chatsFloatingBtn = document.querySelector(".chats-floating");
+      if (chatsFloatingBtn) {
+        chatsFloatingBtn.addEventListener("click", () => {
+          if (navigator.vibrate) navigator.vibrate(50);
+        });
+      }
+
       // Profile action
       const profileBtn = document.getElementById("navProfileBtn");
       if (profileBtn) {
