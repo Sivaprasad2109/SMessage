@@ -40,7 +40,7 @@
         
         <!-- FRONT SIDE: Create Room -->
         <section class="sm-hero-card glassy-hero sm-card-front" style="text-align: center; padding: 20px 20px; height: 420px; justify-content: flex-start;">
-          <h2 style="font-size: 1.4rem; margin-bottom: 5px; color: #1A2D53;">Select Room Configuration</h2>
+          <h2 style="font-size: 1.4rem; margin-bottom: 5px;">Select Room Configuration</h2>
           
           <p style="color: #5B6B8A; font-size: 0.8rem; margin-bottom: 5px; margin-top: 10px; text-align: left; font-weight: 600;">Room Type</p>
           <div class="sm-home-capacity-box" style="width: 100%; margin-bottom: 5px;">
@@ -73,7 +73,7 @@
 
         <!-- BACK SIDE: Join Room -->
         <section class="sm-hero-card glassy-hero sm-card-back" style="text-align: center; padding: 25px 20px; height: 420px; justify-content: flex-start;">
-          <h2 style="font-size: 1.4rem; margin-bottom: 10px; color: #1A2D53; margin-top: 15px;">Enter Passcode</h2>
+          <h2 style="font-size: 1.4rem; margin-bottom: 10px; margin-top: 15px;">Enter Passcode</h2>
           <p style="color: #5B6B8A; font-size: 0.85rem; margin-bottom: 25px;">Enter the 6-digit code provided by the room creator.</p>
           
           <input id="joinRoomInput" type="number" placeholder="000000" oninput="if(this.value.length > 6) this.value = this.value.slice(0, 6);" style="width: 100%; max-width: 300px; margin: 0 auto; padding: 15px; font-size: 2rem; text-align: center; letter-spacing: 10px; border-radius: 15px; border: 2px solid rgba(255, 255, 255, 0.15); background: rgba(255, 255, 255, 0.08); outline: none; transition: all 0.3s; color: #ffffff; font-weight: 700;" />
@@ -182,13 +182,16 @@
 
       function syncCardFace() {
         const hash = window.location.hash;
-        navCreate.classList.add("active");
         if (hash === "#join") {
+          navCreate.classList.remove("active");
+          chatsFloatingBtn.classList.add("active");
           flipper.classList.add("flipped");
           tagline.textContent = "Join Existing Room";
           // Focus join room input
           setTimeout(() => { document.getElementById("joinRoomInput").focus(); }, 350);
         } else {
+          navCreate.classList.add("active");
+          chatsFloatingBtn.classList.remove("active");
           flipper.classList.remove("flipped");
           tagline.textContent = "Create New Room";
         }
@@ -231,7 +234,7 @@
         localStorage.setItem('last_expire_at', expireAt);
         localStorage.setItem('last_room_type', roomType || "private");
         
-        linkDisplay.innerHTML = `<div class="sm-hero-card glassy-card" style="margin-top:20px; text-align:center; padding: 20px;">
+        linkDisplay.innerHTML = `<div class="sm-hero-card glassy-hero" style="margin-top:20px; text-align:center; padding: 20px;">
           <p style="color:#5B6B8A; margin-bottom:5px;">Room Passcode</p>
           <h1 style="font-size: 2.5rem; color:#2C64E3; letter-spacing: 5px; margin: 10px 0;">${passcode}</h1>
           <p id="countdown" style="font-size:0.9rem; color:#d35400; font-weight:600;"></p>

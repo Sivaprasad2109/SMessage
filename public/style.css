@@ -2163,3 +2163,10 @@ body.sm-light-theme .sm-page-bg.modern-ui {
 .sm-light-theme #typePublic:checked ~ label[for="typePublic"] {
     color: #ffffff !important;
 }
+
+#roomDisplay {
+    color: #90caf9;
+}
+.sm-light-theme #roomDisplay {
+    color: #0f2d5c !important;
+}
