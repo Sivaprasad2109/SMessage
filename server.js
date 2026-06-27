@@ -53,33 +53,37 @@ const broadcastPresence = (rId) => {
     io.to(rId).emit("updateParticipants", users);
 };
   
-// --- Updated Create Room: Receives 'capacity' from UI ---
+// --- Updated Create Room: Receives 'capacity' and 'roomType' from UI ---
   socket.on("createRoom", (data) => {
     const passcode = generateUniquePasscode();
     const roomId = crypto.randomBytes(16).toString("hex");
-    const expiresIn = 31 * 60 * 1000; 
-    const expireAt = Date.now() + expiresIn;
+    
+    const roomType = data && data.roomType ? data.roomType : "private";
+    const expiresIn = roomType === "public" ? 0 : (31 * 60 * 1000); 
+    const expireAt = expiresIn > 0 ? (Date.now() + expiresIn) : 0;
 
     // Capture capacity from data, default to 2 if not provided
     const capacity = data && data.capacity ? data.capacity : 2;
 
-    // Store the maxCapacity in your rooms Map
-    rooms.set(passcode, { roomId, expireAt, maxCapacity: capacity });
+    // Store the maxCapacity and roomType in your rooms Map
+    rooms.set(passcode, { roomId, expireAt, maxCapacity: capacity, roomType });
     roomIds.set(roomId, passcode);
 
     socket.join(roomId);
     socket.roomId = roomId;
     socket.userName = "Creator"; 
-    socket.emit("roomCreated", { passcode, roomId, expireAt });
+    socket.emit("roomCreated", { passcode, roomId, expireAt, roomType });
 
-    setTimeout(() => {
-      if (rooms.has(passcode)) {
-        rooms.delete(passcode);
-        roomIds.delete(roomId);
-        io.to(roomId).emit("systemMessage", "⚠️ Room expired.");
-        io.socketsLeave(roomId);
-      }
-    }, expiresIn);
+    if (expiresIn > 0) {
+      setTimeout(() => {
+        if (rooms.has(passcode)) {
+          rooms.delete(passcode);
+          roomIds.delete(roomId);
+          io.to(roomId).emit("systemMessage", "⚠️ Room expired.");
+          io.socketsLeave(roomId);
+        }
+      }, expiresIn);
+    }
   });
 
   // --- Updated Join Room: Checks against stored maxCapacity ---
@@ -114,7 +118,8 @@ const broadcastPresence = (rId) => {
     socket.emit("joinSuccess", { 
         roomId: roomData.roomId, 
         passcode: roomIds.get(roomData.roomId),
-        expireAt: roomData.expireAt 
+        expireAt: roomData.expireAt,
+        roomType: roomData.roomType || "private"
     });
 
     io.to(roomData.roomId).emit("systemMessage", `${socket.userName} joined.`);

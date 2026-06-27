@@ -66,9 +66,23 @@ if (window.Android) window.Android.setBannerVisible(false);
     let passcode = params.get("p") || localStorage.getItem("last_passcode");
     let secretKey = params.get("key") || localStorage.getItem("last_secret_key");
     let expireAt = Number(params.get("expireAt")) || Number(localStorage.getItem("last_expire_at")) || 0;
+    let roomType = params.get("roomType") || localStorage.getItem("last_room_type") || "private";
     let myName = params.get("name") || localStorage.getItem("blinkchat_name") || "Guest";
 
     if (!roomId || roomId === "null") { window.location.href = "index.html"; return; }
+
+    // Save to Recent Chats if Public room
+    if (roomType === "public") {
+        let recent = JSON.parse(localStorage.getItem("sm_recent_chats") || "[]");
+        if (!recent.some(c => c.roomId === roomId)) {
+            recent.push({
+                roomId: roomId,
+                passcode: passcode,
+                joinedAt: new Date().toLocaleDateString()
+            });
+            localStorage.setItem("sm_recent_chats", JSON.stringify(recent));
+        }
+    }
 
     const messagesDiv = document.getElementById("messages");
     const input = document.getElementById("messageInput");
@@ -307,33 +321,42 @@ if (window.Android) window.Android.setBannerVisible(false);
     // --- FEATURE 3: RED TIMER & ALERT LOGIC ---
     let alertShown = false; // Prevents the alert from showing multiple times per second
 
-    const timerInterval = setInterval(() => {
-        const now = Date.now();
-        const diff = expireAt - now;
+    const timerBox = document.getElementById("timerBox");
+    if (roomType === "public") {
+        if (timerBox) {
+            timerBox.textContent = "♾️ Public";
+            timerBox.style.fontSize = "0.75rem";
+            timerBox.style.padding = "4px 10px";
+            timerBox.style.background = "rgba(44, 100, 227, 0.2)";
+        }
+    } else {
+        const timerInterval = setInterval(() => {
+            const now = Date.now();
+            const diff = expireAt - now;
 
-        if (diff <= 0) {
-            clearInterval(timerInterval);
-            if (window.Android) window.Android.showAd();
-            window.location.href = "index.html";
-        } else {
-            const m = Math.floor(diff / 60000);
-            const s = Math.floor((diff % 60000) / 1000);
-            const timerBox = document.getElementById("timerBox");
-            timerBox.textContent = `${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
+            if (diff <= 0) {
+                clearInterval(timerInterval);
+                if (window.Android) window.Android.showAd();
+                window.location.href = "index.html";
+            } else {
+                const m = Math.floor(diff / 60000);
+                const s = Math.floor((diff % 60000) / 1000);
+                if (timerBox) timerBox.textContent = `${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
 
-            // Check if 3 minutes (180,000ms) or less are remaining
-            if (diff <= 180000) {
-                // Add the urgent red pulsing class from your style.css
-                timerBox.classList.add("sm-timer-urgent");
+                // Check if 3 minutes (180,000ms) or less are remaining
+                if (diff <= 180000) {
+                    // Add the urgent red pulsing class from your style.css
+                    if (timerBox) timerBox.classList.add("sm-timer-urgent");
 
-                // Show the floating alert only once when the threshold is hit
-                if (!alertShown) {
-                    showFloatingWarning("3 Minutes Remaining! Wrap up your chat.");
-                    alertShown = true;
+                    // Show the floating alert only once when the threshold is hit
+                    if (!alertShown) {
+                        showFloatingWarning("3 Minutes Remaining! Wrap up your chat.");
+                        alertShown = true;
+                    }
                 }
             }
-        }
-    }, 1000);
+        }, 1000);
+    }
 
     // Helper function to create and show the floating alert
     function showFloatingWarning(text) {
@@ -359,9 +382,23 @@ if (window.Android) window.Android.setBannerVisible(false);
     document.getElementById("quitBtn").addEventListener("click", () => {
         if (confirm("Quit and delete chat history?")) {
             if (window.Android) window.Android.showAd();
+            
+            // Clean up from recent chats
+            let recent = JSON.parse(localStorage.getItem("sm_recent_chats") || "[]");
+            recent = recent.filter(c => c.roomId !== roomId);
+            localStorage.setItem("sm_recent_chats", JSON.stringify(recent));
+
             socket.emit("destroyRoom");
             window.location.href = "index.html";
         }
+    });
+
+    socket.on("roomDestroyed", () => {
+        let recent = JSON.parse(localStorage.getItem("sm_recent_chats") || "[]");
+        recent = recent.filter(c => c.roomId !== roomId);
+        localStorage.setItem("sm_recent_chats", JSON.stringify(recent));
+        alert("The room was closed by a participant.");
+        window.location.href = "index.html";
     });
 
     // Typing Logic

@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta name="theme-color" content="#0a3d91">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+  <title>Recent Chats - SMessage</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body class="sm-page-bg modern-ui">
+  <script>
+    (() => {
+      const currentTheme = localStorage.getItem("sm_theme") || "dark";
+      if (currentTheme === "light") {
+        document.body.classList.add("sm-light-theme");
+      }
+    })();
+  </script>
+
+  <div class="sm-aurora-blob blob-1"></div>
+  <div class="sm-aurora-blob blob-2"></div>
+
+  <header class="sm-main-header">
+    <div class="sm-brand">
+      <img src="SMessage.png" alt="SMessage Logo" class="sm-app-icon-mini">
+      <div>
+        <h1 class="sm-title">SMessage</h1>
+        <p class="sm-tagline">Recent Chats</p>
+      </div>
+    </div>
+    <button id="themeToggleBtn" class="sm-theme-toggle-pill" title="Toggle Theme">🌙</button>
+  </header>
+
+  <main class="sm-content-scroll sm-page-entrance" style="padding: 20px;">
+    
+    <div id="recentChatsContainer" style="display: flex; flex-direction: column; gap: 15px; align-items: center; width: 100%; margin-top: 10px;">
+      <!-- List will be injected here -->
+    </div>
+
+  </main>
+
+  <nav class="sm-bottom-nav modern-nav">
+    <a href="index.html" class="nav-item" style="text-decoration:none;">
+      <span class="icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+          <polyline points="9 22 9 12 15 12 15 22"></polyline>
+        </svg>
+      </span>
+      <span>Home</span>
+    </a>
+    
+    <a href="rooms.html#create" class="nav-item" style="text-decoration:none;">
+      <span class="icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="16"></line>
+          <line x1="8" y1="12" x2="16" y2="12"></line>
+        </svg>
+      </span>
+      <span>Rooms</span>
+    </a>
+    
+    <a href="recent.html" class="nav-item chats-floating active" style="text-decoration:none;">
+      <div class="sm-chats-floating-btn">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+        </svg>
+      </div>
+      <span style="display:none;">Chats</span>
+    </a>
+    
+    <div class="nav-item-spacer"></div>
+    
+    <a href="#" class="nav-item" id="navProfileBtn" style="text-decoration:none;">
+      <span class="icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+      </span>
+      <span>Profile</span>
+    </a>
+  </nav>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    if (window.Android) window.Android.setBannerVisible(true);
+    
+    window.addEventListener("load", () => {
+      // Theme Toggle implementation
+      const themeToggleBtn = document.getElementById("themeToggleBtn");
+      if (themeToggleBtn) {
+        const currentTheme = localStorage.getItem("sm_theme") || "dark";
+        themeToggleBtn.textContent = currentTheme === "light" ? "☀️" : "🌙";
+        themeToggleBtn.addEventListener("click", () => {
+          document.body.classList.toggle("sm-light-theme");
+          const isLight = document.body.classList.contains("sm-light-theme");
+          localStorage.setItem("sm_theme", isLight ? "light" : "dark");
+          themeToggleBtn.textContent = isLight ? "☀️" : "🌙";
+        });
+      }
+
+      // Profile action
+      const profileBtn = document.getElementById("navProfileBtn");
+      if (profileBtn) {
+        profileBtn.addEventListener("click", (e) => {
+          e.preventDefault();
+          const userId = localStorage.getItem("sm_user_id") || "Anonymous";
+          const streak = localStorage.getItem("sm_streak") || "1";
+          alert(`👤 SMessage Profile\n\nAnonymous UserID:\n${userId}\n\nActive Streak: ${streak} Days\n\nMaintain your daily streak to unlock premium chat backgrounds!`);
+        });
+      }
+
+      const container = document.getElementById("recentChatsContainer");
+
+      function renderRecentChats() {
+        const recent = JSON.parse(localStorage.getItem("sm_recent_chats") || "[]");
+        if (recent.length === 0) {
+          container.innerHTML = `
+            <div class="sm-hero-card glassy-hero" style="text-align: center; padding: 40px 20px; width: min(94%, 500px); margin-top: 30px;">
+              <div style="font-size: 3.5rem; margin-bottom: 15px;">💬</div>
+              <h2 style="font-size: 1.3rem; margin-bottom: 10px; color:#ffffff;">No Recent Chats</h2>
+              <p style="color: #5B6B8A; font-size: 0.85rem; margin-bottom: 25px; line-height: 1.5;">You haven't joined any persistent public rooms yet. Create or join one to see it listed here.</p>
+              <a href="rooms.html#create" class="sm-btn sm-btn-primary" style="text-decoration:none; padding: 12px 25px; border-radius: 25px; background: #2C64E3; font-weight:600; display: inline-block;">Go to Rooms</a>
+            </div>
+          `;
+          return;
+        }
+
+        container.innerHTML = "";
+        recent.forEach((chat) => {
+          const card = document.createElement("div");
+          card.className = "sm-hero-card glassy-hero";
+          card.style.width = "min(94%, 500px)";
+          card.style.padding = "20px";
+          card.style.display = "flex";
+          card.style.flexDirection = "column";
+          card.style.gap = "15px";
+          card.style.minHeight = "auto";
+          card.style.margin = "0";
+
+          card.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+              <div>
+                <span style="font-size:0.75rem; background:rgba(44, 100, 227, 0.15); color:#2C64E3; padding:3px 8px; border-radius:12px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">🌐 Public Room</span>
+                <h3 style="font-size: 1.4rem; margin: 8px 0 2px 0; letter-spacing: 2px; color:#ffffff;">Code: ${chat.passcode}</h3>
+                <p style="color:#5B6B8A; font-size:0.75rem; margin:0;">Joined on ${chat.joinedAt || "Recent"}</p>
+              </div>
+              <div style="display:flex; gap: 8px;">
+                <button class="rejoin-btn sm-btn" data-room="${chat.roomId}" data-passcode="${chat.passcode}" style="background:#2C64E3; color:#ffffff; padding: 8px 16px; font-size:0.85rem; border-radius:15px; font-weight:600;">Rejoin</button>
+                <button class="delete-btn sm-btn" data-room="${chat.roomId}" style="background:rgba(231, 76, 60, 0.15); color:#e74c3c; padding: 8px 12px; font-size:0.85rem; border-radius:15px; border:1px solid rgba(231,76,60,0.3); font-weight:600;">Remove</button>
+              </div>
+            </div>
+          `;
+
+          container.appendChild(card);
+        });
+
+        // Add Event Listeners
+        document.querySelectorAll(".rejoin-btn").forEach(btn => {
+          btn.addEventListener("click", () => {
+            const rId = btn.getAttribute("data-room");
+            const p = btn.getAttribute("data-passcode");
+            window.location.href = `join.html?room=${rId}&p=${p}&roomType=public`;
+          });
+        });
+
+        document.querySelectorAll(".delete-btn").forEach(btn => {
+          btn.addEventListener("click", () => {
+            const rId = btn.getAttribute("data-room");
+            if (confirm("Are you sure you want to remove this room from your recent chats list?")) {
+              let chats = JSON.parse(localStorage.getItem("sm_recent_chats") || "[]");
+              chats = chats.filter(c => c.roomId !== rId);
+              localStorage.setItem("sm_recent_chats", JSON.stringify(chats));
+              renderRecentChats();
+            }
+          });
+        });
+      }
+
+      renderRecentChats();
+    });
+  </script>
+</body>
+</html>

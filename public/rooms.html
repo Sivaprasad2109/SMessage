@@ -39,10 +39,21 @@
       <div id="roomsCardFlipper" class="sm-flipper">
         
         <!-- FRONT SIDE: Create Room -->
-        <section class="sm-hero-card glassy-hero sm-card-front" style="text-align: center; padding: 25px 20px;">
-          <h2 style="font-size: 1.5rem; margin-bottom: 10px; color: #1A2D53;">Select Room Capacity</h2>
-          <p style="color: #5B6B8A; font-size: 0.85rem; margin-bottom: 15px;">Choose how many friends can join your private room.</p>
+        <section class="sm-hero-card glassy-hero sm-card-front" style="text-align: center; padding: 20px 20px; height: 420px; justify-content: flex-start;">
+          <h2 style="font-size: 1.4rem; margin-bottom: 5px; color: #1A2D53;">Select Room Configuration</h2>
           
+          <p style="color: #5B6B8A; font-size: 0.8rem; margin-bottom: 5px; margin-top: 10px; text-align: left; font-weight: 600;">Room Type</p>
+          <div class="sm-home-capacity-box" style="width: 100%; margin-bottom: 5px;">
+            <div class="sm-segmented-control type-select">
+              <input type="radio" name="roomType" value="private" id="typePrivate" checked>
+              <label for="typePrivate">🔒 Private (30m)</label>
+              <input type="radio" name="roomType" value="public" id="typePublic">
+              <label for="typePublic">🌐 Public (No Timer)</label>
+              <div class="sm-slider-type"></div>
+            </div>
+          </div>
+
+          <p style="color: #5B6B8A; font-size: 0.8rem; margin-bottom: 5px; margin-top: 10px; text-align: left; font-weight: 600;">Room Capacity</p>
           <div class="sm-home-capacity-box" style="width: 100%;">
             <div class="sm-segmented-control">
               <input type="radio" name="roomSize" value="2" id="size2" checked>
@@ -55,15 +66,15 @@
             </div>
           </div>
           
-          <button id="createRoomActionBtn" class="sm-btn sm-btn-primary" style="margin-top: 25px; width: 100%; padding: 15px; font-size: 1.1rem; border-radius: 30px; background: #2C64E3; box-shadow: 0 10px 20px rgba(44,100,227,0.3);">Create Room</button>
+          <button id="createRoomActionBtn" class="sm-btn sm-btn-primary" style="margin-top: 20px; width: 100%; padding: 13px; font-size: 1.05rem; border-radius: 30px; background: #2C64E3; box-shadow: 0 10px 20px rgba(44,100,227,0.3);">Create Room</button>
           
-          <button id="flipToJoinBtn" class="sm-flip-btn">Already have a passcode?</button>
+          <button id="flipToJoinBtn" class="sm-flip-btn" style="margin-top: 15px;">Already have a passcode?</button>
         </section>
 
         <!-- BACK SIDE: Join Room -->
-        <section class="sm-hero-card glassy-hero sm-card-back" style="text-align: center; padding: 25px 20px;">
-          <h2 style="font-size: 1.5rem; margin-bottom: 10px; color: #1A2D53;">Enter Passcode</h2>
-          <p style="color: #5B6B8A; font-size: 0.85rem; margin-bottom: 15px;">Enter the 6-digit code provided by the room creator.</p>
+        <section class="sm-hero-card glassy-hero sm-card-back" style="text-align: center; padding: 25px 20px; height: 420px; justify-content: flex-start;">
+          <h2 style="font-size: 1.4rem; margin-bottom: 10px; color: #1A2D53; margin-top: 15px;">Enter Passcode</h2>
+          <p style="color: #5B6B8A; font-size: 0.85rem; margin-bottom: 25px;">Enter the 6-digit code provided by the room creator.</p>
           
           <input id="joinRoomInput" type="number" placeholder="000000" oninput="if(this.value.length > 6) this.value = this.value.slice(0, 6);" style="width: 100%; max-width: 300px; margin: 0 auto; padding: 15px; font-size: 2rem; text-align: center; letter-spacing: 10px; border-radius: 15px; border: 2px solid rgba(255, 255, 255, 0.15); background: rgba(255, 255, 255, 0.08); outline: none; transition: all 0.3s; color: #ffffff; font-weight: 700;" />
           
@@ -71,7 +82,7 @@
           
           <p id="joinErrorMsg" style="color: #e74c3c; margin-top: 12px; font-size: 0.9rem; font-weight: 600; display: none;">Invalid Passcode</p>
           
-          <button id="flipToCreateBtn" class="sm-flip-btn">Need to create a new room?</button>
+          <button id="flipToCreateBtn" class="sm-flip-btn" style="margin-top: 25px;">Need to create a new room?</button>
         </section>
 
       </div>
@@ -103,7 +114,7 @@
       <span>Rooms</span>
     </a>
     
-    <a href="#join" class="nav-item chats-floating" style="text-decoration:none;">
+    <a href="recent.html" class="nav-item chats-floating" style="text-decoration:none;">
       <div class="sm-chats-floating-btn">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
@@ -155,16 +166,15 @@
 
       function syncCardFace() {
         const hash = window.location.hash;
+        navCreate.classList.add("active");
         if (hash === "#join") {
           flipper.classList.add("flipped");
           tagline.textContent = "Join Existing Room";
-          navCreate.classList.remove("active");
           // Focus join room input
           setTimeout(() => { document.getElementById("joinRoomInput").focus(); }, 350);
         } else {
           flipper.classList.remove("flipped");
           tagline.textContent = "Create New Room";
-          navCreate.classList.add("active");
         }
       }
 
@@ -189,12 +199,13 @@
       createBtn.addEventListener('click', () => {
         if (window.Android) window.Android.showAd();
         const selectedSize = document.querySelector('input[name="roomSize"]:checked').value;
+        const selectedType = document.querySelector('input[name="roomType"]:checked').value;
         createBtn.disabled = true;
         createBtn.textContent = 'Creating...';
-        socket.emit('createRoom', { capacity: parseInt(selectedSize) }); 
+        socket.emit('createRoom', { capacity: parseInt(selectedSize), roomType: selectedType }); 
       });
 
-      socket.on('roomCreated', ({ passcode, roomId, expireAt }) => {
+      socket.on('roomCreated', ({ passcode, roomId, expireAt, roomType }) => {
         createBtn.disabled = false;
         createBtn.textContent = 'Room Created';
         const secretKey = CryptoJS.SHA256(passcode).toString();
@@ -202,6 +213,7 @@
         localStorage.setItem('last_passcode', passcode);
         localStorage.setItem('last_secret_key', secretKey);
         localStorage.setItem('last_expire_at', expireAt);
+        localStorage.setItem('last_room_type', roomType || "private");
         
         linkDisplay.innerHTML = `<div class="sm-hero-card glassy-card" style="margin-top:20px; text-align:center; padding: 20px;">
           <p style="color:#5B6B8A; margin-bottom:5px;">Room Passcode</p>
@@ -218,7 +230,7 @@
           if (countText) countText.textContent = `Redirecting in ${count}s...`;
           if (count <= 0) { 
             clearInterval(t); 
-            window.location.href = `join.html?room=${roomId}&p=${passcode}&key=${secretKey}&expireAt=${expireAt}`; 
+            window.location.href = `join.html?room=${roomId}&p=${passcode}&key=${secretKey}&expireAt=${expireAt}&roomType=${roomType || 'private'}`; 
           }
         }, 1000);
       });
@@ -248,9 +260,9 @@
         }
       });
 
-      socket.on('joinSuccess', ({ roomId, passcode, expireAt }) => {
+      socket.on('joinSuccess', ({ roomId, passcode, expireAt, roomType }) => {
         const secretKey = CryptoJS.SHA256(passcode).toString();
-        window.location.href = `join.html?room=${roomId}&p=${passcode}&key=${secretKey}&expireAt=${expireAt}`;
+        window.location.href = `join.html?room=${roomId}&p=${passcode}&key=${secretKey}&expireAt=${expireAt}&roomType=${roomType || 'private'}`;
       });
 
       socket.on('error', (err) => {

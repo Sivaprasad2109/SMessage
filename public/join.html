@@ -43,6 +43,7 @@
     let roomId = params.get("room") || localStorage.getItem("last_room_id");
     let passcode = params.get("p") || localStorage.getItem("last_passcode");
     let expireAt = params.get("expireAt") || localStorage.getItem("last_expire_at");
+    let roomType = params.get("roomType") || localStorage.getItem("last_room_type") || "private";
 
     if (!roomId || roomId === "null") { window.location.href = "index.html"; return; }
 
@@ -76,9 +77,10 @@
         localStorage.setItem("last_passcode", passcode);
         localStorage.setItem("last_secret_key", secretKey);
         localStorage.setItem("last_expire_at", expireAt);
+        localStorage.setItem("last_room_type", roomType);
 
-        // Pass name AND avatar as URL parameters
-        window.location.href = `chat.html?room=${roomId}&p=${passcode}&key=${secretKey}&expireAt=${expireAt}&name=${encodeURIComponent(name)}&avatar=${selectedAvatar}`;
+        // Pass name AND avatar AND roomType as URL parameters
+        window.location.href = `chat.html?room=${roomId}&p=${passcode}&key=${secretKey}&expireAt=${expireAt}&roomType=${roomType}&name=${encodeURIComponent(name)}&avatar=${selectedAvatar}`;
     });
 })();
 </script>

@@ -2132,3 +2132,34 @@ body.sm-light-theme .sm-page-bg.modern-ui {
     pointer-events: none;
     visibility: hidden;
 }
+
+/* --- ROOM TYPE SELECT SLIDER --- */
+.sm-segmented-control.type-select .sm-slider-type {
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    bottom: 6px;
+    width: calc((100% - 12px) / 2);
+    background: #2C64E3;
+    border-radius: 15px;
+    z-index: 1;
+    transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+#typePrivate:checked ~ .sm-slider-type { transform: translateX(0); }
+#typePublic:checked ~ .sm-slider-type { transform: translateX(100%); }
+
+#typePrivate:checked ~ label[for="typePrivate"],
+#typePublic:checked ~ label[for="typePublic"] {
+    color: #FFD700;
+}
+
+/* Light theme variations */
+.sm-light-theme .sm-segmented-control.type-select .sm-slider-type {
+    background: #2C64E3 !important;
+}
+.sm-light-theme #typePrivate:checked ~ label[for="typePrivate"],
+.sm-light-theme #typePublic:checked ~ label[for="typePublic"] {
+    color: #ffffff !important;
+}
