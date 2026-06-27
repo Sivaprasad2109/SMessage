@@ -234,7 +234,7 @@
         localStorage.setItem('last_expire_at', expireAt);
         localStorage.setItem('last_room_type', roomType || "private");
         
-        linkDisplay.innerHTML = `<div class="sm-hero-card glassy-hero" style="margin-top:20px; text-align:center; padding: 20px;">
+        linkDisplay.innerHTML = `<div class="sm-hero-card glassy-hero" style="margin-top:20px; text-align:center; padding: 20px; flex-direction: column; align-items: center; justify-content: center;">
           <p style="color:#5B6B8A; margin-bottom:5px;">Room Passcode</p>
           <h1 style="font-size: 2.5rem; color:#2C64E3; letter-spacing: 5px; margin: 10px 0;">${passcode}</h1>
           <p id="countdown" style="font-size:0.9rem; color:#d35400; font-weight:600;"></p>

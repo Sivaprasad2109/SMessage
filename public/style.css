@@ -137,7 +137,8 @@ html, body {
 }
 
 .sm-card-header { text-align: center; }
-.sm-app-title { font-size: 1.8rem; color: #0a3d91; margin-bottom: 6px; }
+.sm-app-title { font-size: 1.8rem; color: #ffffff; margin-bottom: 6px; }
+.sm-light-theme .sm-app-title { color: #0f2d5c !important; }
 .sm-subtitle { color: #56637a; font-size: 0.95rem; }
 
 /* Buttons */
@@ -530,9 +531,14 @@ html, body {
     gap: 15px;
     margin: 20px 0;
     padding: 10px;
-    background: rgba(248, 249, 252, 0.5);
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.06);
     border-radius: 15px;
     justify-items: center;
+}
+.sm-light-theme .sm-avatar-grid {
+    background: rgba(44, 100, 227, 0.05) !important;
+    border: 1px solid rgba(44, 100, 227, 0.1) !important;
 }
 
 .sm-avatar-img {
@@ -2191,6 +2197,9 @@ body.sm-full-chat-body {
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
+    background: linear-gradient(-45deg, #050b14, #0d2550, #1a1b40, #0c1c38) !important;
+    background-size: 400% 400% !important;
+    animation: auroraFlow 15s ease infinite !important;
 }
 
 .sm-full-chat-body .sm-chat-wrap {
