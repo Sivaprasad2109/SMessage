@@ -2260,3 +2260,22 @@ body.sm-full-chat-body {
         margin-bottom: 0 !important;
     }
 }
+
+/* Premium Button and Navbar Responsive Adjustments */
+@media (max-width: 400px) {
+    .sm-premium-pill-mockup .sm-premium-text {
+        display: none;
+    }
+    .sm-premium-pill-mockup {
+        padding: 8px 10px;
+    }
+}
+
+@media (max-width: 360px) {
+    .sm-bottom-nav.modern-nav .nav-item span:not(.icon) {
+        font-size: 0.65rem !important;
+    }
+    .sm-bottom-nav.modern-nav .nav-item {
+        padding: 4px 2px !important;
+    }
+}
