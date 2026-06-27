@@ -432,9 +432,9 @@ try {
     }
 
     socket.on("connect", () => { 
-    const myAvatar = params.get("avatar") || "f1.png"; // Get it from URL
-    socket.emit("joinRoom", { roomId, passcode, name: myName, avatar: myAvatar }); 
-});
+        const myAvatar = params.get("avatar") || "f1.png"; // Get it from URL
+        socket.emit("joinRoom", { roomId, passcode, name: myName, avatar: myAvatar }); 
+    });
     sendBtn.addEventListener("click", sendMessage);
     
     document.getElementById("quitBtn").addEventListener("click", () => {
