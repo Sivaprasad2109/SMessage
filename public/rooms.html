@@ -100,7 +100,7 @@
           <line x1="8" y1="12" x2="16" y2="12"></line>
         </svg>
       </span>
-      <span>Create</span>
+      <span>Rooms</span>
     </a>
     
     <a href="#join" class="nav-item chats-floating" style="text-decoration:none;">
@@ -112,17 +112,7 @@
       <span style="display:none;">Chats</span>
     </a>
     
-    <a id="navRoomsBtn" href="#join" class="nav-item" style="text-decoration:none;">
-      <span class="icon">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-          <circle cx="9" cy="7" r="4"></circle>
-          <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-          <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-        </svg>
-      </span>
-      <span>Rooms</span>
-    </a>
+    <div class="nav-item-spacer"></div>
     
     <a href="#" class="nav-item" id="navProfileBtn" style="text-decoration:none;">
       <span class="icon">
@@ -162,7 +152,6 @@
       const flipToCreateBtn = document.getElementById("flipToCreateBtn");
       const tagline = document.getElementById("roomsHeaderTagline");
       const navCreate = document.getElementById("navCreateBtn");
-      const navRooms = document.getElementById("navRoomsBtn");
 
       function syncCardFace() {
         const hash = window.location.hash;
@@ -170,14 +159,12 @@
           flipper.classList.add("flipped");
           tagline.textContent = "Join Existing Room";
           navCreate.classList.remove("active");
-          navRooms.classList.add("active");
           // Focus join room input
           setTimeout(() => { document.getElementById("joinRoomInput").focus(); }, 350);
         } else {
           flipper.classList.remove("flipped");
           tagline.textContent = "Create New Room";
           navCreate.classList.add("active");
-          navRooms.classList.remove("active");
         }
       }
 
